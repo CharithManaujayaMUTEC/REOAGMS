@@ -16,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +59,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         return AuthResponse.builder()
                 .token(token)
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().getName().name())
                 .build();
 
     }
@@ -78,12 +83,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found"));
 
         String token = jwtService.generateToken(user.getUsername());
 
         return AuthResponse.builder()
                 .token(token)
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().getName().name())
                 .build();
 
     }
