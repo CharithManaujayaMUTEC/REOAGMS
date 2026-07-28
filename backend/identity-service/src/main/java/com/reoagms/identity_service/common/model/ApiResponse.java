@@ -1,4 +1,4 @@
-package com.reoagms.identity.common.model;
+package com.reoagms.identity_service.common.model;
 
 import lombok.Builder;
 import lombok.Data;

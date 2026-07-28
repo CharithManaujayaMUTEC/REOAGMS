@@ -1,4 +1,4 @@
-package com.reoagms.identity.common.enums;
+package com.reoagms.identity_service.common.enums;
 
 public enum RoleType {
 

@@ -1,4 +1,4 @@
-package com.reoagms.identity.common.constants;
+package com.reoagms.identity_service.common.constants;
 
 public final class ApiEndpoints {
 

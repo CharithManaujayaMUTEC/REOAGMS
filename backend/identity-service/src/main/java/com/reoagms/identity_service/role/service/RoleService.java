@@ -1,7 +1,7 @@
-package com.reoagms.identity.role.service;
+package com.reoagms.identity_service.role.service;
 
-import com.reoagms.identity.common.enums.RoleType;
-import com.reoagms.identity.role.model.Role;
+import com.reoagms.identity_service.common.enums.RoleType;
+import com.reoagms.identity_service.role.model.Role;
 
 import java.util.List;
 

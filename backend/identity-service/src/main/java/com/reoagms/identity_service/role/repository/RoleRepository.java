@@ -1,7 +1,7 @@
-package com.reoagms.identity.role.repository;
+package com.reoagms.identity_service.role.repository;
 
-import com.reoagms.identity.common.enums.RoleType;
-import com.reoagms.identity.role.model.Role;
+import com.reoagms.identity_service.common.enums.RoleType;
+import com.reoagms.identity_service.role.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

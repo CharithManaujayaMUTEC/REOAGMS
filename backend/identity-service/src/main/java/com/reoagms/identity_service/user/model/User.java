@@ -1,7 +1,7 @@
-package com.reoagms.identity.user.model;
+package com.reoagms.identity_service.user.model;
 
-import com.reoagms.identity.common.model.BaseEntity;
-import com.reoagms.identity.role.model.Role;
+import com.reoagms.identity_service.common.model.BaseEntity;
+import com.reoagms.identity_service.role.model.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -63,6 +63,11 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     @Override

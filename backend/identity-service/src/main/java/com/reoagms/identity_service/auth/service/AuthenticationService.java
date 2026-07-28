@@ -1,8 +1,8 @@
-package com.reoagms.identity.auth.service;
+package com.reoagms.identity_service.auth.service;
 
-import com.reoagms.identity.auth.dto.AuthResponse;
-import com.reoagms.identity.auth.dto.LoginRequest;
-import com.reoagms.identity.auth.dto.RegisterRequest;
+import com.reoagms.identity_service.auth.dto.AuthResponse;
+import com.reoagms.identity_service.auth.dto.LoginRequest;
+import com.reoagms.identity_service.auth.dto.RegisterRequest;
 
 public interface AuthenticationService {
 

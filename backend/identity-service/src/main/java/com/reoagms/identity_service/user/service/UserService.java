@@ -1,7 +1,7 @@
-package com.reoagms.identity.user.service;
+package com.reoagms.identity_service.user.service;
 
-import com.reoagms.identity.user.dto.CreateUserRequest;
-import com.reoagms.identity.user.dto.UserResponse;
+import com.reoagms.identity_service.user.dto.CreateUserRequest;
+import com.reoagms.identity_service.user.dto.UserResponse;
 
 import java.util.List;
 import java.util.UUID;

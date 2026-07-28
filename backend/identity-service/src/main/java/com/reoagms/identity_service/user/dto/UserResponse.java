@@ -1,4 +1,4 @@
-package com.reoagms.identity.user.dto;
+package com.reoagms.identity_service.user.dto;
 
 import lombok.Builder;
 import lombok.Data;

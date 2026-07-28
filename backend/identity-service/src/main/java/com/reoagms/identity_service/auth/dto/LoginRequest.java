@@ -1,4 +1,4 @@
-package com.reoagms.identity.auth.dto;
+package com.reoagms.identity_service.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

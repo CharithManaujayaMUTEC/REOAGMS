@@ -1,9 +1,10 @@
-package com.reoagms.identity.auth.controller;
+package com.reoagms.identity_service.auth.controller;
 
-import com.reoagms.identity.auth.dto.AuthResponse;
-import com.reoagms.identity.auth.dto.LoginRequest;
-import com.reoagms.identity.auth.dto.RegisterRequest;
-import com.reoagms.identity.auth.service.AuthenticationService;
+import com.reoagms.identity_service.auth.dto.AuthResponse;
+import com.reoagms.identity_service.auth.dto.LoginRequest;
+import com.reoagms.identity_service.auth.dto.RegisterRequest;
+import com.reoagms.identity_service.auth.service.AuthenticationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,16 +13,22 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthenticationController {
 
-    private final AuthenticationService authenticationService;
+    private final AuthenticationService service;
 
     @PostMapping("/register")
-    public AuthResponse register(@RequestBody RegisterRequest request) {
-        return authenticationService.register(request);
+    public AuthResponse register(
+            @Valid @RequestBody RegisterRequest request) {
+
+        return service.register(request);
+
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody LoginRequest request) {
-        return authenticationService.login(request);
+    public AuthResponse login(
+            @Valid @RequestBody LoginRequest request) {
+
+        return service.login(request);
+
     }
 
 }

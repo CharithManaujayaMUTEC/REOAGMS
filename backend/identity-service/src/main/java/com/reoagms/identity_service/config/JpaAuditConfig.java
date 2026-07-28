@@ -1,4 +1,4 @@
-package com.reoagms.identity.config;
+package com.reoagms.identity_service.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;

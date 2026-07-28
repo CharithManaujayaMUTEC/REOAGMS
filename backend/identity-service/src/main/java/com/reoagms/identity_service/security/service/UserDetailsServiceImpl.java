@@ -1,6 +1,6 @@
-package com.reoagms.identity.security.service;
+package com.reoagms.identity_service.security.service;
 
-import com.reoagms.identity.user.repository.UserRepository;
+import com.reoagms.identity_service.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;

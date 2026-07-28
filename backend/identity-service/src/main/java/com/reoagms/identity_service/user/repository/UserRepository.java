@@ -1,6 +1,6 @@
-package com.reoagms.identity.user.repository;
+package com.reoagms.identity_service.user.repository;
 
-import com.reoagms.identity.user.model.User;
+import com.reoagms.identity_service.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

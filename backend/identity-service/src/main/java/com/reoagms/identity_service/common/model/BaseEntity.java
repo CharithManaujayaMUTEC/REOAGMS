@@ -1,4 +1,4 @@
-package com.reoagms.identity.common.model;
+package com.reoagms.identity_service.common.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

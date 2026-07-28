@@ -1,4 +1,4 @@
-package com.reoagms.identity.exception;
+package com.reoagms.identity_service.exception;
 
 public class EmailAlreadyExistsException extends RuntimeException {
 

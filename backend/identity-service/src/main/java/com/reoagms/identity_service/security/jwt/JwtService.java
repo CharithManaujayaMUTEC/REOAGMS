@@ -1,4 +1,4 @@
-package com.reoagms.identity.security.jwt;
+package com.reoagms.identity_service.security.jwt;
 
 import io.jsonwebtoken.Claims;
 

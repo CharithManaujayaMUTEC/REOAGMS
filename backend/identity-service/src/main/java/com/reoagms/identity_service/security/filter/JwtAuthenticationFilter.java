@@ -1,7 +1,7 @@
-package com.reoagms.identity.security.filter;
+package com.reoagms.identity_service.security.filter;
 
-import com.reoagms.identity.security.jwt.JwtService;
-import com.reoagms.identity.security.service.UserDetailsServiceImpl;
+import com.reoagms.identity_service.security.jwt.JwtService;
+import com.reoagms.identity_service.security.service.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

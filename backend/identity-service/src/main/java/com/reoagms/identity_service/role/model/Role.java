@@ -1,8 +1,8 @@
-package com.reoagms.identity.role.model;
+package com.reoagms.identity_service.role.model;
 
-import com.reoagms.identity.common.enums.RoleType;
-import com.reoagms.identity.common.model.BaseEntity;
-import com.reoagms.identity.user.model.User;
+import com.reoagms.identity_service.common.enums.RoleType;
+import com.reoagms.identity_service.common.model.BaseEntity;
+import com.reoagms.identity_service.user.model.User;
 import jakarta.persistence.*;
 
 import lombok.Getter;

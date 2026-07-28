@@ -1,4 +1,4 @@
-package com.reoagms.identity.auth.dto;
+package com.reoagms.identity_service.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
