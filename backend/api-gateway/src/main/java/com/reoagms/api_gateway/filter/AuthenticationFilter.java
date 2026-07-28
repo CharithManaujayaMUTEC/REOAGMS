@@ -1,10 +1,10 @@
 package com.reoagms.api_gateway.filter;
 
-import com.reoagms.api_gateway.jwt.JwtService;
 import com.reoagms.api_gateway.util.RouteValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import com.reoagms.api_gateway.jwt.JwtService;
 
 @Component
 @RequiredArgsConstructor
