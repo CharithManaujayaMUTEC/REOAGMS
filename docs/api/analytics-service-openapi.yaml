@@ -1,0 +1,351 @@
+openapi: 3.0.3
+info:
+  title: REOAGMS Analytics & Reporting Service API
+  version: 1.0.0
+  description: API contract for dashboard configuration, live analytics, reports, statistics, KPI management, and CSV export.
+servers:
+  - url: http://localhost:8086
+    description: Direct local service
+tags:
+  - name: Dashboards
+  - name: Analytics
+  - name: Energy Reports
+  - name: Performance Reports
+  - name: KPIs
+paths:
+  /api/v1/dashboards:
+    post:
+      tags: [Dashboards]
+      summary: Create a dashboard configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DashboardRequest'}
+      responses:
+        '201': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+    get:
+      tags: [Dashboards]
+      summary: List dashboard configurations
+      responses:
+        '200': {description: Dashboard list, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+  /api/v1/dashboards/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      tags: [Dashboards]
+      summary: Get a dashboard configuration
+      responses:
+        '200': {description: Dashboard, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      tags: [Dashboards]
+      summary: Update a dashboard configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DashboardRequest'}
+      responses:
+        '200': {description: Updated dashboard, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      tags: [Dashboards]
+      summary: Delete a dashboard configuration
+      responses:
+        '204': {description: Deleted}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Calculate a live dashboard summary
+      parameters:
+        - {$ref: '#/components/parameters/FacilityId'}
+        - {$ref: '#/components/parameters/AssetId'}
+        - {$ref: '#/components/parameters/From'}
+        - {$ref: '#/components/parameters/To'}
+      responses:
+        '200': {description: Live dashboard, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+  /api/v1/energy-reports:
+    post:
+      tags: [Energy Reports]
+      summary: Generate and save an energy report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/EnergyReportRequest'}
+      responses:
+        '201': {description: Generated report, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+    get:
+      tags: [Energy Reports]
+      summary: List saved energy reports
+      responses:
+        '200': {description: Report list, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+  /api/v1/energy-reports/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      tags: [Energy Reports]
+      summary: Get a saved energy report
+      responses:
+        '200': {description: Energy report, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      tags: [Energy Reports]
+      summary: Regenerate a saved energy report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/EnergyReportRequest'}
+      responses:
+        '200': {description: Regenerated report, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+    delete:
+      tags: [Energy Reports]
+      summary: Delete a saved energy report
+      responses:
+        '204': {description: Deleted}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/energy-reports/{id}/export:
+    get:
+      tags: [Energy Reports]
+      summary: Export an energy report as CSV
+      parameters:
+        - {$ref: '#/components/parameters/Id'}
+        - name: format
+          in: query
+          schema: {type: string, enum: [CSV], default: CSV}
+      responses:
+        '200': {description: CSV document, content: {text/csv: {schema: {type: string, format: binary}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/performance-reports:
+    post:
+      tags: [Performance Reports]
+      summary: Generate and save a performance report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PerformanceReportRequest'}
+      responses:
+        '201': {description: Generated report, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+    get:
+      tags: [Performance Reports]
+      summary: List saved performance reports
+      responses:
+        '200': {description: Report list, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+  /api/v1/performance-reports/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      tags: [Performance Reports]
+      summary: Get a saved performance report
+      responses:
+        '200': {description: Performance report, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      tags: [Performance Reports]
+      summary: Regenerate a saved performance report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PerformanceReportRequest'}
+      responses:
+        '200': {description: Regenerated report, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+    delete:
+      tags: [Performance Reports]
+      summary: Delete a saved performance report
+      responses:
+        '204': {description: Deleted}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/performance-reports/{id}/export:
+    get:
+      tags: [Performance Reports]
+      summary: Export a performance report as CSV
+      parameters:
+        - {$ref: '#/components/parameters/Id'}
+        - name: format
+          in: query
+          schema: {type: string, enum: [CSV], default: CSV}
+      responses:
+        '200': {description: CSV document, content: {text/csv: {schema: {type: string, format: binary}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/kpis:
+    post:
+      tags: [KPIs]
+      summary: Create a KPI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/KpiRequest'}
+      responses:
+        '201': {description: Created KPI, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+    get:
+      tags: [KPIs]
+      summary: List KPIs
+      responses:
+        '200': {description: KPI list, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+  /api/v1/kpis/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      tags: [KPIs]
+      summary: Get a KPI
+      responses:
+        '200': {description: KPI, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      tags: [KPIs]
+      summary: Update a KPI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/KpiRequest'}
+      responses:
+        '200': {description: Updated KPI, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      tags: [KPIs]
+      summary: Delete a KPI
+      responses:
+        '204': {description: Deleted}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/reports:
+    get:
+      tags: [Analytics]
+      summary: List combined energy and performance report summaries
+      responses:
+        '200': {description: Combined reports, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+  /api/v1/statistics:
+    get:
+      tags: [Analytics]
+      summary: Calculate grouped energy statistics
+      parameters:
+        - {$ref: '#/components/parameters/FacilityId'}
+        - {$ref: '#/components/parameters/AssetId'}
+        - {$ref: '#/components/parameters/From'}
+        - {$ref: '#/components/parameters/To'}
+        - name: groupBy
+          in: query
+          schema: {type: string, enum: [HOUR, DAY, WEEK, MONTH], default: DAY}
+      responses:
+        '200': {description: Statistics, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    FacilityId:
+      name: facilityId
+      in: query
+      schema: {type: string, format: uuid}
+    AssetId:
+      name: assetId
+      in: query
+      schema: {type: string, format: uuid}
+    From:
+      name: from
+      in: query
+      schema: {type: string, format: date-time}
+    To:
+      name: to
+      in: query
+      schema: {type: string, format: date-time}
+  responses:
+    BadRequest:
+      description: Invalid request
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorResponse'}}}
+    NotFound:
+      description: Resource not found
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorResponse'}}}
+    ServiceUnavailable:
+      description: Required upstream service unavailable or incompatible
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorResponse'}}}
+  schemas:
+    ApiResponse:
+      type: object
+      required: [success, message]
+      properties:
+        success: {type: boolean}
+        message: {type: string}
+        data: {nullable: true}
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp: {type: string, format: date-time}
+        status: {type: integer}
+        message: {type: string}
+        path: {type: string}
+        validationErrors:
+          type: object
+          additionalProperties: {type: string}
+          nullable: true
+    DashboardRequest:
+      type: object
+      required: [name, dashboardType, defaultRangeDays, active]
+      properties:
+        name: {type: string, maxLength: 120}
+        description: {type: string, maxLength: 500}
+        dashboardType: {type: string, enum: [EXECUTIVE, OPERATIONS, MAINTENANCE, ASSET_PERFORMANCE]}
+        ownerUserId: {type: string, format: uuid, nullable: true}
+        defaultRangeDays: {type: integer, minimum: 1, maximum: 365}
+        active: {type: boolean}
+        layoutConfiguration: {type: string, nullable: true}
+    EnergyReportRequest:
+      type: object
+      required: [name, periodStart, periodEnd]
+      properties:
+        name: {type: string, maxLength: 120}
+        facilityId: {type: string, format: uuid, nullable: true}
+        assetId: {type: string, format: uuid, nullable: true}
+        periodStart: {type: string, format: date-time}
+        periodEnd: {type: string, format: date-time}
+        expectedEnergy: {type: number, format: double, nullable: true}
+    PerformanceReportRequest:
+      type: object
+      required: [name, scopeType, periodStart, periodEnd]
+      properties:
+        name: {type: string, maxLength: 120}
+        scopeType: {type: string, enum: [ORGANIZATION, FACILITY, ASSET]}
+        scopeId: {type: string, format: uuid, nullable: true}
+        periodStart: {type: string, format: date-time}
+        periodEnd: {type: string, format: date-time}
+    KpiRequest:
+      type: object
+      required: [name, kpiType, scopeType, periodStart, periodEnd, actualValue, unit]
+      properties:
+        name: {type: string, maxLength: 120}
+        kpiType:
+          type: string
+          enum: [TOTAL_ENERGY, AVERAGE_ENERGY, PEAK_ENERGY, AVAILABILITY, EFFICIENCY, CAPACITY_FACTOR, UTILIZATION, DOWNTIME_HOURS, ALERT_COUNT, OPEN_WORK_ORDER_COUNT, MAINTENANCE_COMPLETION_RATE]
+        scopeType: {type: string, enum: [ORGANIZATION, FACILITY, ASSET]}
+        scopeId: {type: string, format: uuid, nullable: true}
+        periodStart: {type: string, format: date-time}
+        periodEnd: {type: string, format: date-time}
+        actualValue: {type: number, minimum: 0}
+        targetValue: {type: number, minimum: 0, nullable: true}
+        unit: {type: string, maxLength: 30}

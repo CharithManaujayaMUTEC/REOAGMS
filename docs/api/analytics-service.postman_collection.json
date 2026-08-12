@@ -1,0 +1,114 @@
+{
+  "info": {
+    "_postman_id": "c8f76f9e-analytics-reoagms-2026",
+    "name": "REOAGMS Analytics & Reporting Service",
+    "description": "CRUD, live analytics, report generation, statistics, and CSV export requests for Sachinthana's service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8086"},
+    {"key": "facilityId", "value": "00000000-0000-0000-0000-000000000001"},
+    {"key": "assetId", "value": "00000000-0000-0000-0000-000000000002"},
+    {"key": "dashboardId", "value": ""},
+    {"key": "energyReportId", "value": ""},
+    {"key": "performanceReportId", "value": ""},
+    {"key": "kpiId", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {"method": "GET", "url": "{{baseUrl}}/actuator/health"}
+    },
+    {
+      "name": "Dashboards",
+      "item": [
+        {
+          "name": "Create Dashboard",
+          "event": [{"listen": "test", "script": {"exec": ["const body = pm.response.json();", "if (body.data && body.data.id) pm.collectionVariables.set('dashboardId', body.data.id);", "pm.test('Created', () => pm.response.to.have.status(201));"]}}],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Executive Dashboard\",\n  \"description\": \"Executive renewable energy overview\",\n  \"dashboardType\": \"EXECUTIVE\",\n  \"ownerUserId\": null,\n  \"defaultRangeDays\": 30,\n  \"active\": true,\n  \"layoutConfiguration\": \"{\\\"columns\\\":3}\"\n}"},
+            "url": "{{baseUrl}}/api/v1/dashboards"
+          }
+        },
+        {"name": "List Dashboards", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/dashboards"}},
+        {"name": "Get Dashboard", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/dashboards/{{dashboardId}}"}},
+        {
+          "name": "Update Dashboard",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Executive Dashboard Updated\",\n  \"description\": \"Updated dashboard\",\n  \"dashboardType\": \"EXECUTIVE\",\n  \"ownerUserId\": null,\n  \"defaultRangeDays\": 7,\n  \"active\": true,\n  \"layoutConfiguration\": null\n}"},
+            "url": "{{baseUrl}}/api/v1/dashboards/{{dashboardId}}"
+          }
+        },
+        {"name": "Delete Dashboard", "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/dashboards/{{dashboardId}}"}}
+      ]
+    },
+    {
+      "name": "Live Analytics",
+      "item": [
+        {"name": "Dashboard Summary", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/dashboard?facilityId={{facilityId}}&from=2026-01-01T00:00:00&to=2026-01-02T00:00:00"}},
+        {"name": "Combined Reports", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/reports"}},
+        {"name": "Daily Statistics", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/statistics?facilityId={{facilityId}}&from=2026-01-01T00:00:00&to=2026-02-01T00:00:00&groupBy=DAY"}}
+      ]
+    },
+    {
+      "name": "Energy Reports",
+      "item": [
+        {
+          "name": "Generate Energy Report",
+          "event": [{"listen": "test", "script": {"exec": ["const body = pm.response.json();", "if (body.data && body.data.id) pm.collectionVariables.set('energyReportId', body.data.id);", "pm.test('Generated', () => pm.response.to.have.status(201));"]}}],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Daily Energy Report\",\n  \"facilityId\": \"{{facilityId}}\",\n  \"assetId\": null,\n  \"periodStart\": \"2026-01-01T00:00:00\",\n  \"periodEnd\": \"2026-01-02T00:00:00\",\n  \"expectedEnergy\": 12500.0\n}"},
+            "url": "{{baseUrl}}/api/v1/energy-reports"
+          }
+        },
+        {"name": "List Energy Reports", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/energy-reports"}},
+        {"name": "Get Energy Report", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/energy-reports/{{energyReportId}}"}},
+        {"name": "Export Energy CSV", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/energy-reports/{{energyReportId}}/export?format=CSV"}},
+        {"name": "Delete Energy Report", "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/energy-reports/{{energyReportId}}"}}
+      ]
+    },
+    {
+      "name": "Performance Reports",
+      "item": [
+        {
+          "name": "Generate Performance Report",
+          "event": [{"listen": "test", "script": {"exec": ["const body = pm.response.json();", "if (body.data && body.data.id) pm.collectionVariables.set('performanceReportId', body.data.id);", "pm.test('Generated', () => pm.response.to.have.status(201));"]}}],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Asset Performance Report\",\n  \"scopeType\": \"ASSET\",\n  \"scopeId\": \"{{assetId}}\",\n  \"periodStart\": \"2026-01-01T00:00:00\",\n  \"periodEnd\": \"2026-02-01T00:00:00\"\n}"},
+            "url": "{{baseUrl}}/api/v1/performance-reports"
+          }
+        },
+        {"name": "List Performance Reports", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/performance-reports"}},
+        {"name": "Get Performance Report", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/performance-reports/{{performanceReportId}}"}},
+        {"name": "Export Performance CSV", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/performance-reports/{{performanceReportId}}/export?format=CSV"}},
+        {"name": "Delete Performance Report", "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/performance-reports/{{performanceReportId}}"}}
+      ]
+    },
+    {
+      "name": "KPIs",
+      "item": [
+        {
+          "name": "Create KPI",
+          "event": [{"listen": "test", "script": {"exec": ["const body = pm.response.json();", "if (body.data && body.data.id) pm.collectionVariables.set('kpiId', body.data.id);", "pm.test('Created', () => pm.response.to.have.status(201));"]}}],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Monthly Availability\",\n  \"kpiType\": \"AVAILABILITY\",\n  \"scopeType\": \"FACILITY\",\n  \"scopeId\": \"{{facilityId}}\",\n  \"periodStart\": \"2026-01-01T00:00:00\",\n  \"periodEnd\": \"2026-02-01T00:00:00\",\n  \"actualValue\": 98.5,\n  \"targetValue\": 97.0,\n  \"unit\": \"percent\"\n}"},
+            "url": "{{baseUrl}}/api/v1/kpis"
+          }
+        },
+        {"name": "List KPIs", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/kpis"}},
+        {"name": "Get KPI", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/kpis/{{kpiId}}"}},
+        {"name": "Delete KPI", "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/kpis/{{kpiId}}"}}
+      ]
+    }
+  ]
+}
