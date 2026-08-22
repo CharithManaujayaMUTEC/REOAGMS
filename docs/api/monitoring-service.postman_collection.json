@@ -1,0 +1,112 @@
+{
+  "info": {
+    "_postman_id": "d3a1c9e4-monitoring-reoagms-2026",
+    "name": "REOAGMS Monitoring Service",
+    "description": "Sensor readings, alert rules, alerts, telemetry, and dashboard requests for Govindu's service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8083"},
+    {"key": "facilityId", "value": "00000000-0000-0000-0000-000000000001"},
+    {"key": "assetId", "value": "00000000-0000-0000-0000-000000000002"},
+    {"key": "sensorId", "value": "00000000-0000-0000-0000-000000000003"},
+    {"key": "sensorReadingId", "value": ""},
+    {"key": "alertRuleId", "value": ""},
+    {"key": "alertId", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {"method": "GET", "url": "{{baseUrl}}/actuator/health"}
+    },
+    {
+      "name": "Sensor Readings",
+      "item": [
+        {
+          "name": "Create Sensor Reading (breaches sample rule)",
+          "event": [{"listen": "test", "script": {"exec": ["const body = pm.response.json();", "if (body.id) pm.collectionVariables.set('sensorReadingId', body.id);", "pm.test('Created', () => pm.response.to.have.status(201));"]}}],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"sensorId\": \"{{sensorId}}\",\n  \"assetId\": \"{{assetId}}\",\n  \"facilityId\": \"{{facilityId}}\",\n  \"timestamp\": \"2026-08-14T12:00:00\",\n  \"value\": 95.0,\n  \"unit\": \"C\",\n  \"metricType\": \"TEMPERATURE\"\n}"},
+            "url": "{{baseUrl}}/api/v1/sensor-readings"
+          }
+        },
+        {"name": "List/Filter Sensor Readings", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/sensor-readings?facilityId={{facilityId}}&assetId={{assetId}}&from=2026-01-01T00:00:00&to=2026-12-31T23:59:59"}},
+        {"name": "Get Sensor Reading By Id", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/sensor-readings/{{sensorReadingId}}"}},
+        {"name": "Get Readings By Sensor", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/sensor-readings/sensor/{{sensorId}}"}},
+        {"name": "Get Latest Reading For Sensor", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/sensor-readings/sensor/{{sensorId}}/latest"}},
+        {"name": "Get Readings By Asset", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/sensor-readings/asset/{{assetId}}"}}
+      ]
+    },
+    {
+      "name": "Alert Rules",
+      "item": [
+        {
+          "name": "Create Alert Rule (temperature > 80)",
+          "event": [{"listen": "test", "script": {"exec": ["const body = pm.response.json();", "if (body.data && body.data.id) pm.collectionVariables.set('alertRuleId', body.data.id);", "pm.test('Created', () => pm.response.to.have.status(201));"]}}],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"High temperature\",\n  \"assetId\": \"{{assetId}}\",\n  \"facilityId\": \"{{facilityId}}\",\n  \"metricType\": \"TEMPERATURE\",\n  \"operator\": \"GREATER_THAN\",\n  \"threshold\": 80.0,\n  \"severity\": \"HIGH\",\n  \"enabled\": true,\n  \"description\": \"Raise a HIGH alert when panel temperature exceeds 80C\"\n}"},
+            "url": "{{baseUrl}}/api/v1/alert-rules"
+          }
+        },
+        {"name": "List Alert Rules", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/alert-rules"}},
+        {"name": "Get Alert Rule", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/alert-rules/{{alertRuleId}}"}},
+        {
+          "name": "Update Alert Rule",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"High temperature (revised)\",\n  \"assetId\": \"{{assetId}}\",\n  \"facilityId\": \"{{facilityId}}\",\n  \"metricType\": \"TEMPERATURE\",\n  \"operator\": \"GREATER_THAN\",\n  \"threshold\": 85.0,\n  \"severity\": \"CRITICAL\",\n  \"enabled\": true,\n  \"description\": \"Raised threshold after recalibration\"\n}"},
+            "url": "{{baseUrl}}/api/v1/alert-rules/{{alertRuleId}}"
+          }
+        },
+        {"name": "Delete Alert Rule", "request": {"method": "DELETE", "url": "{{baseUrl}}/api/v1/alert-rules/{{alertRuleId}}"}}
+      ]
+    },
+    {
+      "name": "Alerts",
+      "item": [
+        {
+          "name": "Manually Raise Alert",
+          "event": [{"listen": "test", "script": {"exec": ["const body = pm.response.json();", "if (body.id) pm.collectionVariables.set('alertId', body.id);", "pm.test('Created', () => pm.response.to.have.status(201));"]}}],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"facilityId\": \"{{facilityId}}\",\n  \"metricType\": \"VOLTAGE\",\n  \"value\": 250.0,\n  \"severity\": \"MEDIUM\",\n  \"message\": \"Manual inspection flagged unstable voltage\"\n}"},
+            "url": "{{baseUrl}}/api/v1/alerts"
+          }
+        },
+        {"name": "List/Filter Alerts", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/alerts?facilityId={{facilityId}}&assetId={{assetId}}&status=OPEN"}},
+        {"name": "Get Alert By Id", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/alerts/{{alertId}}"}},
+        {"name": "Acknowledge Alert", "request": {"method": "PUT", "url": "{{baseUrl}}/api/v1/alerts/{{alertId}}/acknowledge"}},
+        {"name": "Resolve Alert", "request": {"method": "PUT", "url": "{{baseUrl}}/api/v1/alerts/{{alertId}}/resolve"}}
+      ]
+    },
+    {
+      "name": "Telemetry",
+      "item": [
+        {
+          "name": "Record Telemetry",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"facilityId\": \"{{facilityId}}\",\n  \"status\": \"ONLINE\",\n  \"lastSeenAt\": \"2026-08-14T12:00:00\",\n  \"batteryLevel\": 92.5,\n  \"signalStrength\": 78.0\n}"},
+            "url": "{{baseUrl}}/api/v1/telemetry"
+          }
+        },
+        {"name": "List Telemetry", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/telemetry"}},
+        {"name": "Get Telemetry By Asset", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/telemetry/asset/{{assetId}}"}},
+        {"name": "Get Latest Telemetry For Asset", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/telemetry/asset/{{assetId}}/latest"}}
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {"name": "Dashboard Summary", "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/dashboard/summary"}}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: REOAGMS Monitoring Service API
+  version: 1.0.0
+  description: >
+    API contract for sensor reading ingestion/history, alert rule management,
+    automatic and manual alert lifecycle, device telemetry, and a dashboard summary.
+    The sensor-readings and alerts list endpoints return plain JSON arrays
+    (not wrapped in an envelope) because Analytics Service consumes them directly.
+servers:
+  - url: http://localhost:8083
+    description: Direct local service
+  - url: http://localhost:8080
+    description: Via API Gateway
+tags:
+  - name: Sensor Readings
+  - name: Alert Rules
+  - name: Alerts
+  - name: Telemetry
+  - name: Dashboard
+paths:
+  /api/v1/sensor-readings:
+    post:
+      tags: [Sensor Readings]
+      summary: Ingest a sensor reading (also triggers alert-rule evaluation)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SensorReadingRequest'}
+      responses:
+        '201': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/SensorReadingResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+    get:
+      tags: [Sensor Readings]
+      summary: List/filter sensor readings (plain array, consumed by Analytics Service)
+      parameters:
+        - {$ref: '#/components/parameters/FacilityId'}
+        - {$ref: '#/components/parameters/AssetId'}
+        - name: sensorId
+          in: query
+          schema: {type: string, format: uuid}
+        - name: metricType
+          in: query
+          schema: {$ref: '#/components/schemas/MetricType'}
+        - {$ref: '#/components/parameters/From'}
+        - {$ref: '#/components/parameters/To'}
+      responses:
+        '200':
+          description: Sensor readings, most recent first
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/SensorReadingResponse'}}
+  /api/v1/sensor-readings/{id}:
+    get:
+      tags: [Sensor Readings]
+      summary: Get a sensor reading by id
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses:
+        '200': {description: Sensor reading, content: {application/json: {schema: {$ref: '#/components/schemas/SensorReadingResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/sensor-readings/sensor/{sensorId}:
+    get:
+      tags: [Sensor Readings]
+      summary: Get all readings for a sensor
+      parameters:
+        - name: sensorId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: Sensor readings, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/SensorReadingResponse'}}}}}
+  /api/v1/sensor-readings/sensor/{sensorId}/latest:
+    get:
+      tags: [Sensor Readings]
+      summary: Get the most recent reading for a sensor
+      parameters:
+        - name: sensorId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: Latest reading, content: {application/json: {schema: {$ref: '#/components/schemas/SensorReadingResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/sensor-readings/asset/{assetId}:
+    get:
+      tags: [Sensor Readings]
+      summary: Get all readings for an asset
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: Sensor readings, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/SensorReadingResponse'}}}}}
+
+  /api/v1/alert-rules:
+    post:
+      tags: [Alert Rules]
+      summary: Create an alert rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AlertRuleRequest'}
+      responses:
+        '201': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponseAlertRule'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+    get:
+      tags: [Alert Rules]
+      summary: List all alert rules
+      responses:
+        '200': {description: Alert rules, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponseAlertRuleList'}}}}
+  /api/v1/alert-rules/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    get:
+      tags: [Alert Rules]
+      summary: Get an alert rule
+      responses:
+        '200': {description: Alert rule, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponseAlertRule'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      tags: [Alert Rules]
+      summary: Update an alert rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AlertRuleRequest'}
+      responses:
+        '200': {description: Updated alert rule, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponseAlertRule'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      tags: [Alert Rules]
+      summary: Delete an alert rule
+      responses:
+        '204': {description: Deleted}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  /api/v1/alerts:
+    post:
+      tags: [Alerts]
+      summary: Manually raise an alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AlertRequest'}
+      responses:
+        '201': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/AlertResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+    get:
+      tags: [Alerts]
+      summary: List/filter alerts (plain array, consumed by Analytics Service)
+      parameters:
+        - {$ref: '#/components/parameters/FacilityId'}
+        - {$ref: '#/components/parameters/AssetId'}
+        - name: status
+          in: query
+          schema: {$ref: '#/components/schemas/AlertStatus'}
+        - {$ref: '#/components/parameters/From'}
+        - {$ref: '#/components/parameters/To'}
+      responses:
+        '200': {description: Alerts, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/AlertResponse'}}}}}
+  /api/v1/alerts/{id}:
+    get:
+      tags: [Alerts]
+      summary: Get an alert by id
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses:
+        '200': {description: Alert, content: {application/json: {schema: {$ref: '#/components/schemas/AlertResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/alerts/{id}/acknowledge:
+    put:
+      tags: [Alerts]
+      summary: Acknowledge an open alert
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses:
+        '200': {description: Acknowledged alert, content: {application/json: {schema: {$ref: '#/components/schemas/AlertResponse'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/alerts/{id}/resolve:
+    put:
+      tags: [Alerts]
+      summary: Resolve an alert
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses:
+        '200': {description: Resolved alert, content: {application/json: {schema: {$ref: '#/components/schemas/AlertResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  /api/v1/telemetry:
+    post:
+      tags: [Telemetry]
+      summary: Record a device heartbeat/connectivity signal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TelemetryRequest'}
+      responses:
+        '201': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/TelemetryResponse'}}}}
+    get:
+      tags: [Telemetry]
+      summary: List all telemetry records
+      responses:
+        '200': {description: Telemetry records, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/TelemetryResponse'}}}}}
+  /api/v1/telemetry/asset/{assetId}:
+    get:
+      tags: [Telemetry]
+      summary: Get telemetry history for an asset
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: Telemetry records, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/TelemetryResponse'}}}}}
+  /api/v1/telemetry/asset/{assetId}/latest:
+    get:
+      tags: [Telemetry]
+      summary: Get the latest telemetry record for an asset
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: Latest telemetry, content: {application/json: {schema: {$ref: '#/components/schemas/TelemetryResponse'}}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  /api/v1/dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Get monitoring dashboard summary counts
+      responses:
+        '200': {description: Dashboard summary, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponseDashboardSummary'}}}}
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    FacilityId:
+      name: facilityId
+      in: query
+      schema: {type: string, format: uuid}
+    AssetId:
+      name: assetId
+      in: query
+      schema: {type: string, format: uuid}
+    From:
+      name: from
+      in: query
+      schema: {type: string, format: date-time}
+    To:
+      name: to
+      in: query
+      schema: {type: string, format: date-time}
+  responses:
+    BadRequest:
+      description: Validation error
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorResponse'}}}
+    NotFound:
+      description: Resource not found
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorResponse'}}}
+  schemas:
+    MetricType:
+      type: string
+      enum: [TEMPERATURE, VOLTAGE, CURRENT, POWER, WIND_SPEED, SOLAR_IRRADIANCE, WATER_FLOW, HUMIDITY, PRESSURE]
+    ConditionOperator:
+      type: string
+      enum: [GREATER_THAN, GREATER_THAN_OR_EQUAL, LESS_THAN, LESS_THAN_OR_EQUAL, EQUAL]
+    AlertSeverity:
+      type: string
+      enum: [LOW, MEDIUM, HIGH, CRITICAL]
+    AlertStatus:
+      type: string
+      enum: [OPEN, ACKNOWLEDGED, RESOLVED]
+    DeviceStatus:
+      type: string
+      enum: [ONLINE, OFFLINE, WARNING]
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp: {type: string, format: date-time}
+        status: {type: integer}
+        message: {type: string}
+        path: {type: string}
+        validationErrors: {type: object, additionalProperties: {type: string}}
+    SensorReadingRequest:
+      type: object
+      required: [sensorId, assetId, timestamp, value, metricType]
+      properties:
+        sensorId: {type: string, format: uuid}
+        assetId: {type: string, format: uuid}
+        facilityId: {type: string, format: uuid}
+        timestamp: {type: string, format: date-time}
+        value: {type: number}
+        unit: {type: string}
+        metricType: {$ref: '#/components/schemas/MetricType'}
+    SensorReadingResponse:
+      allOf:
+        - {type: object, properties: {id: {type: string, format: uuid}}}
+        - {$ref: '#/components/schemas/SensorReadingRequest'}
+    AlertRuleRequest:
+      type: object
+      required: [name, metricType, operator, threshold, severity]
+      properties:
+        name: {type: string}
+        assetId: {type: string, format: uuid, nullable: true, description: "null applies the rule to every asset"}
+        facilityId: {type: string, format: uuid}
+        metricType: {$ref: '#/components/schemas/MetricType'}
+        operator: {$ref: '#/components/schemas/ConditionOperator'}
+        threshold: {type: number}
+        severity: {$ref: '#/components/schemas/AlertSeverity'}
+        enabled: {type: boolean, default: true}
+        description: {type: string}
+    AlertRuleResponse:
+      allOf:
+        - {type: object, properties: {id: {type: string, format: uuid}}}
+        - {$ref: '#/components/schemas/AlertRuleRequest'}
+    AlertRequest:
+      type: object
+      required: [assetId, severity, message]
+      properties:
+        assetId: {type: string, format: uuid}
+        facilityId: {type: string, format: uuid}
+        metricType: {$ref: '#/components/schemas/MetricType'}
+        value: {type: number}
+        severity: {$ref: '#/components/schemas/AlertSeverity'}
+        message: {type: string}
+    AlertResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        facilityId: {type: string, format: uuid}
+        assetId: {type: string, format: uuid}
+        sensorReadingId: {type: string, format: uuid, nullable: true}
+        alertRuleId: {type: string, format: uuid, nullable: true}
+        metricType: {$ref: '#/components/schemas/MetricType'}
+        value: {type: number}
+        threshold: {type: number}
+        severity: {$ref: '#/components/schemas/AlertSeverity'}
+        status: {$ref: '#/components/schemas/AlertStatus'}
+        message: {type: string}
+        timestamp: {type: string, format: date-time}
+    TelemetryRequest:
+      type: object
+      required: [assetId, status, lastSeenAt]
+      properties:
+        assetId: {type: string, format: uuid}
+        facilityId: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/DeviceStatus'}
+        lastSeenAt: {type: string, format: date-time}
+        batteryLevel: {type: number}
+        signalStrength: {type: number}
+    TelemetryResponse:
+      allOf:
+        - {type: object, properties: {id: {type: string, format: uuid}}}
+        - {$ref: '#/components/schemas/TelemetryRequest'}
+    DashboardSummaryResponse:
+      type: object
+      properties:
+        totalReadingsLast24h: {type: integer, format: int64}
+        openAlerts: {type: integer, format: int64}
+        acknowledgedAlerts: {type: integer, format: int64}
+        resolvedAlerts: {type: integer, format: int64}
+        alertsBySeverity: {type: object, additionalProperties: {type: integer, format: int64}}
+        onlineDevices: {type: integer, format: int64}
+        offlineDevices: {type: integer, format: int64}
+        warningDevices: {type: integer, format: int64}
+    ApiResponseAlertRule:
+      type: object
+      properties:
+        success: {type: boolean}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/AlertRuleResponse'}
+    ApiResponseAlertRuleList:
+      type: object
+      properties:
+        success: {type: boolean}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/AlertRuleResponse'}}
+    ApiResponseDashboardSummary:
+      type: object
+      properties:
+        success: {type: boolean}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/DashboardSummaryResponse'}
