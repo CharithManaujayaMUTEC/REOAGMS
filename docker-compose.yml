@@ -1,0 +1,208 @@
+services:
+
+  identity-db:
+    image: postgres:16
+    container_name: reoagms-identity-db
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: identity_user
+      POSTGRES_PASSWORD: identity_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - identity_data:/var/lib/postgresql/data
+    networks:
+      - reoagms-network
+
+
+  asset-db:
+    image: postgres:16
+    container_name: reoagms-asset-db
+    environment:
+      POSTGRES_DB: asset_db
+      POSTGRES_USER: asset_user
+      POSTGRES_PASSWORD: asset_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - asset_data:/var/lib/postgresql/data
+    networks:
+      - reoagms-network
+
+
+  monitoring-db:
+    image: postgres:16
+    container_name: reoagms-monitoring-db
+    environment:
+      POSTGRES_DB: monitoring_db
+      POSTGRES_USER: monitoring_user
+      POSTGRES_PASSWORD: monitoring_password
+    ports:
+      - "5435:5432"
+    volumes:
+      - monitoring_data:/var/lib/postgresql/data
+    networks:
+      - reoagms-network
+
+
+  analytics-db:
+    image: postgres:16
+    container_name: reoagms-analytics-db
+    environment:
+      POSTGRES_DB: analytics_db
+      POSTGRES_USER: analytics_user
+      POSTGRES_PASSWORD: analytics_password
+    ports:
+      - "5436:5432"
+    volumes:
+      - analytics_data:/var/lib/postgresql/data
+    networks:
+      - reoagms-network
+
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: reoagms-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: reoagms
+      RABBITMQ_DEFAULT_PASS: reoagms_password
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - reoagms-network
+
+
+  identity-service:
+    build:
+      context: ./backend/identity-service
+    container_name: reoagms-identity-service
+    depends_on:
+      - identity-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://identity-db:5432/identity_db
+      SPRING_DATASOURCE_USERNAME: identity_user
+      SPRING_DATASOURCE_PASSWORD: identity_password
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+    networks:
+      - reoagms-network
+
+
+  asset-service:
+    build:
+      context: ./backend/asset-service
+    container_name: reoagms-asset-service
+    depends_on:
+      - asset-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://asset-db:5432/asset_db
+      SPRING_DATASOURCE_USERNAME: asset_user
+      SPRING_DATASOURCE_PASSWORD: asset_password
+      SERVER_PORT: 8082
+    ports:
+      - "8082:8082"
+    networks:
+      - reoagms-network
+
+
+  monitoring-service:
+    build:
+      context: ./backend/monitoring-service
+    container_name: reoagms-monitoring-service
+    depends_on:
+      - monitoring-db
+      - rabbitmq
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://monitoring-db:5432/monitoring_db
+      SPRING_DATASOURCE_USERNAME: monitoring_user
+      SPRING_DATASOURCE_PASSWORD: monitoring_password
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: reoagms
+      SPRING_RABBITMQ_PASSWORD: reoagms_password
+      SERVER_PORT: 8083
+    ports:
+      - "8083:8083"
+    networks:
+      - reoagms-network
+
+
+  analytics-service:
+    build:
+      context: ./backend/analytics-service
+    container_name: reoagms-analytics-service
+    depends_on:
+      - analytics-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://analytics-db:5432/analytics_db
+      SPRING_DATASOURCE_USERNAME: analytics_user
+      SPRING_DATASOURCE_PASSWORD: analytics_password
+      SERVER_PORT: 8085
+
+      MONITORING_SERVICE_URL: http://monitoring-service:8083
+      ASSET_SERVICE_URL: http://asset-service:8082
+      MAINTENANCE_SERVICE_URL: http://maintenance-service:8084
+    ports:
+      - "8085:8085"
+    networks:
+      - reoagms-network
+
+
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+    container_name: reoagms-api-gateway
+    depends_on:
+      - identity-service
+      - asset-service
+      - monitoring-service
+      - analytics-service
+    environment:
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - reoagms-network
+
+
+  prometheus:
+    image: prom/prometheus
+    container_name: reoagms-prometheus
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - reoagms-network
+
+
+  grafana:
+    image: grafana/grafana
+    container_name: reoagms-grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - reoagms-network
+
+
+networks:
+
+  reoagms-network:
+    driver: bridge
+
+
+volumes:
+
+  identity_data:
+
+  asset_data:
+
+  monitoring_data:
+
+  analytics_data:
