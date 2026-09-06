@@ -59,6 +59,19 @@ services:
     networks:
       - reoagms-network
 
+  maintenance-db:
+    image: postgres:16
+    container_name: reoagms-maintenance-db
+    environment:
+      POSTGRES_DB: maintenance_db
+      POSTGRES_USER: maintenance_user
+      POSTGRES_PASSWORD: maintenance_password
+    ports:
+      - "5437:5432"
+    volumes:
+      - maintenance_data:/var/lib/postgresql/data
+    networks:
+      - reoagms-network
 
   notification-db:
     image: postgres:16
@@ -164,6 +177,23 @@ services:
     networks:
       - reoagms-network
 
+  maintenance-service:
+    build:
+      context: ./backend/maintenance-service
+    container_name: reoagms-maintenance-service
+    depends_on:
+      - maintenance-db
+      - analytics-service
+      - api-gateway
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://maintenance-db:5432/maintenance_db
+      SPRING_DATASOURCE_USERNAME: maintenance_user
+      SPRING_DATASOURCE_PASSWORD: maintenance_password
+      SERVER_PORT: 8084
+    ports:
+      - "8084:8084"
+    networks:
+      - reoagms-network
 
   notification-service:
     build:
@@ -244,3 +274,4 @@ volumes:
   analytics_data:
 
   notification_data:
+  maintenance_data:
