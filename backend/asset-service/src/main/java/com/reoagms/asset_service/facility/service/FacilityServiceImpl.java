@@ -5,7 +5,7 @@ import com.reoagms.asset_service.facility.dto.FacilityResponse;
 import com.reoagms.asset_service.facility.mapper.FacilityMapper;
 import com.reoagms.asset_service.facility.model.Facility;
 import com.reoagms.asset_service.facility.repository.FacilityRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.reoagms.asset_service.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +35,7 @@ public class FacilityServiceImpl implements FacilityService {
 
         Facility facility = repository.findById(id)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Facility not found"));
+                        new ResourceNotFoundException("Facility not found"));
 
         return mapper.toResponse(facility);
 
@@ -61,7 +61,7 @@ public class FacilityServiceImpl implements FacilityService {
         Facility facility = repository.findById(id)
 
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Facility not found"));
+                        new ResourceNotFoundException("Facility not found"));
 
         facility.setName(request.getName());
         facility.setType(request.getType());
