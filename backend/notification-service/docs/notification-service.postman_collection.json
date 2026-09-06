@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "Notification Service",
+    "description": "REOAGMS Notification Service (Yasiru) — notifications, email, SMS.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8086" },
+    { "key": "notificationId", "value": "" },
+    { "key": "emailTemplateId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/notifications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipient\": \"ops@reoagms.dev\",\n  \"channel\": \"EMAIL\",\n  \"subject\": \"High temperature alert\",\n  \"message\": \"Sensor S-104 exceeded threshold.\",\n  \"relatedEntityId\": \"alert-8f21\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('notificationId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/notifications"
+          }
+        },
+        {
+          "name": "Get Notification By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/notifications/{{notificationId}}"
+          }
+        },
+        {
+          "name": "Update Notification",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/notifications/{{notificationId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipient\": \"ops@reoagms.dev\",\n  \"channel\": \"EMAIL\",\n  \"subject\": \"Updated alert\",\n  \"message\": \"Sensor S-104 back to normal.\",\n  \"relatedEntityId\": \"alert-8f21\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Retry Notification",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/notifications/{{notificationId}}/retry"
+          }
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/notifications/{{notificationId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email",
+      "item": [
+        {
+          "name": "Send Email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/email",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to\": \"ops@reoagms.dev\",\n  \"subject\": \"High temperature alert\",\n  \"body\": \"Sensor S-104 exceeded threshold.\",\n  \"relatedEntityId\": \"alert-8f21\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Email Template",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/email-templates",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"welcome\",\n  \"subject\": \"Welcome to REOAGMS\",\n  \"body\": \"Hello {{name}}, your account is ready.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('emailTemplateId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Email Templates",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/email-templates"
+          }
+        },
+        {
+          "name": "Get Email Template By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/email-templates/{{emailTemplateId}}"
+          }
+        },
+        {
+          "name": "Update Email Template",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/email-templates/{{emailTemplateId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"welcome\",\n  \"subject\": \"Welcome to REOAGMS (updated)\",\n  \"body\": \"Hi {{name}}, welcome aboard.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Email Template",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/email-templates/{{emailTemplateId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "item": [
+        {
+          "name": "Send SMS",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/sms",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+94771234567\",\n  \"message\": \"Sensor S-104 exceeded threshold.\",\n  \"relatedEntityId\": \"alert-8f21\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Actuator Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health"
+          }
+        }
+      ]
+    }
+  ]
+}

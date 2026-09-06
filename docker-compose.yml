@@ -73,6 +73,21 @@ services:
     networks:
       - reoagms-network
 
+  notification-db:
+    image: postgres:16
+    container_name: reoagms-notification-db
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: notification_password
+    ports:
+      - "5437:5432"
+    volumes:
+      - notification_data:/var/lib/postgresql/data
+    networks:
+      - reoagms-network
+
+
   rabbitmq:
     image: rabbitmq:4-management
     container_name: reoagms-rabbitmq
@@ -180,6 +195,25 @@ services:
     networks:
       - reoagms-network
 
+  notification-service:
+    build:
+      context: ./backend/notification-service
+    container_name: reoagms-notification-service
+    depends_on:
+      - notification-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://notification-db:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: notification_user
+      SPRING_DATASOURCE_PASSWORD: notification_password
+      SERVER_PORT: 8086
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    ports:
+      - "8086:8086"
+    networks:
+      - reoagms-network
+
+
   api-gateway:
     build:
       context: ./backend/api-gateway
@@ -189,8 +223,10 @@ services:
       - asset-service
       - monitoring-service
       - analytics-service
+      - notification-service
     environment:
       SERVER_PORT: 8080
+      NOTIFICATION_SERVICE_URL: http://notification-service:8086
     ports:
       - "8080:8080"
     networks:
@@ -237,4 +273,5 @@ volumes:
 
   analytics_data:
 
+  notification_data:
   maintenance_data:
