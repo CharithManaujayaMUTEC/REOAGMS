@@ -1,22 +1,36 @@
-# Java
-target/
+# Java / Maven
+**/target/
 *.class
 *.jar
+*.war
+!mvnw
+!mvnw.cmd
+.mvn/wrapper/maven-wrapper.jar
 
-# Node
-node_modules/
-dist/
+# Node / React
+**/node_modules/
+**/dist/
+**/.vite/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
-# IDE
+# IDE / OS
 .idea/
 .vscode/
-
-# OS
+*.iml
 .DS_Store
 Thumbs.db
 
-# Environment
+# Secrets and local config
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
 
-# Logs
+# Logs / coverage
 *.log
+coverage/

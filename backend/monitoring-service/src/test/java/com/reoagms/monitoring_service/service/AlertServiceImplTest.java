@@ -11,6 +11,7 @@ import com.reoagms.monitoring_service.model.AlertRule;
 import com.reoagms.monitoring_service.model.SensorReading;
 import com.reoagms.monitoring_service.repository.AlertRepository;
 import com.reoagms.monitoring_service.repository.AlertRuleRepository;
+import com.reoagms.monitoring_service.messaging.AlertEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,9 +40,12 @@ class AlertServiceImplTest {
 
     private final AlertMapper mapper = new AlertMapper();
 
+    @Mock
+    private AlertEventPublisher eventPublisher;
+
     @BeforeEach
     void setUp() {
-        alertService = new AlertServiceImpl(alertRepository, alertRuleRepository, mapper);
+        alertService = new AlertServiceImpl(alertRepository, alertRuleRepository, mapper, eventPublisher);
     }
 
     @Test

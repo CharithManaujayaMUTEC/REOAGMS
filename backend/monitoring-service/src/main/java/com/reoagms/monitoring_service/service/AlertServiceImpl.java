@@ -12,6 +12,7 @@ import com.reoagms.monitoring_service.model.SensorReading;
 import com.reoagms.monitoring_service.repository.AlertRepository;
 import com.reoagms.monitoring_service.repository.AlertRuleRepository;
 import com.reoagms.monitoring_service.util.ConditionEvaluator;
+import com.reoagms.monitoring_service.messaging.AlertEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -31,11 +32,14 @@ public class AlertServiceImpl implements AlertService {
     private final AlertRepository alertRepository;
     private final AlertRuleRepository alertRuleRepository;
     private final AlertMapper mapper;
+    private final AlertEventPublisher eventPublisher;
 
     @Override
     public AlertResponse create(AlertRequest request) {
         Alert saved = alertRepository.save(mapper.toEntity(request));
-        return mapper.toResponse(saved);
+        AlertResponse response = mapper.toResponse(saved);
+        eventPublisher.publish(response);
+        return response;
     }
 
     @Override
@@ -112,7 +116,9 @@ public class AlertServiceImpl implements AlertService {
                         .message(buildMessage(rule, reading))
                         .timestamp(reading.getTimestamp())
                         .build();
-                generated.add(mapper.toResponse(alertRepository.save(alert)));
+                AlertResponse response = mapper.toResponse(alertRepository.save(alert));
+                generated.add(response);
+                eventPublisher.publish(response);
             }
         }
         return generated;
