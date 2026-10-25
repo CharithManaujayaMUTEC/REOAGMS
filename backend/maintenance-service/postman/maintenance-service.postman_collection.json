@@ -1,0 +1,201 @@
+{
+  "info": {
+    "name": "REOAGMS - Maintenance Service",
+    "description": "Postman collection for the Maintenance Service (EC8208, Thurunu).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8082/api/v1" },
+    { "key": "workOrderId", "value": "" },
+    { "key": "technicianId", "value": "" },
+    { "key": "taskId", "value": "" },
+    { "key": "assetId", "value": "11111111-1111-1111-1111-111111111111" }
+  ],
+  "item": [
+    {
+      "name": "Work Orders",
+      "item": [
+        {
+          "name": "Create Work Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/work-orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"title\": \"Inspect inverter\",\n  \"description\": \"Perform scheduled inspection\",\n  \"maintenanceType\": \"PREVENTIVE\",\n  \"scheduledAt\": \"2026-08-20T09:00:00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Work Orders",
+          "request": { "method": "GET", "url": "{{baseUrl}}/work-orders" }
+        },
+        {
+          "name": "Get Work Order By Id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/work-orders/{{workOrderId}}" }
+        },
+        {
+          "name": "Update Work Order",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/work-orders/{{workOrderId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"title\": \"Inspect inverter (updated)\",\n  \"description\": \"Updated description\",\n  \"maintenanceType\": \"PREVENTIVE\",\n  \"scheduledAt\": \"2026-08-21T09:00:00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Work Order",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/work-orders/{{workOrderId}}" }
+        },
+        {
+          "name": "Assign Technician",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/work-orders/{{workOrderId}}/assign/{{technicianId}}" }
+        },
+        {
+          "name": "Start Work Order",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/work-orders/{{workOrderId}}/start" }
+        },
+        {
+          "name": "Complete Work Order",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/work-orders/{{workOrderId}}/complete" }
+        }
+      ]
+    },
+    {
+      "name": "Maintenance Tasks",
+      "item": [
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/maintenance-tasks",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workOrderId\": \"{{workOrderId}}\",\n  \"title\": \"Check filter\",\n  \"description\": \"Replace air filter\",\n  \"technicianId\": \"{{technicianId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Tasks",
+          "request": { "method": "GET", "url": "{{baseUrl}}/maintenance-tasks" }
+        },
+        {
+          "name": "Get Tasks By Work Order",
+          "request": { "method": "GET", "url": "{{baseUrl}}/maintenance-tasks?workOrderId={{workOrderId}}" }
+        },
+        {
+          "name": "Get Task By Id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/maintenance-tasks/{{taskId}}" }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/maintenance-tasks/{{taskId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workOrderId\": \"{{workOrderId}}\",\n  \"title\": \"Check filter (updated)\",\n  \"description\": \"Replace air filter\",\n  \"technicianId\": \"{{technicianId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/maintenance-tasks/{{taskId}}" }
+        },
+        {
+          "name": "Start Task",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/maintenance-tasks/{{taskId}}/start" }
+        },
+        {
+          "name": "Complete Task",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/maintenance-tasks/{{taskId}}/complete" }
+        }
+      ]
+    },
+    {
+      "name": "Technicians",
+      "item": [
+        {
+          "name": "Create Technician",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/technicians",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nimal Perera\",\n  \"specialization\": \"Electrical\",\n  \"phone\": \"0771234567\",\n  \"email\": \"nimal@example.com\",\n  \"availability\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Technicians",
+          "request": { "method": "GET", "url": "{{baseUrl}}/technicians" }
+        },
+        {
+          "name": "Get Technician By Id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/technicians/{{technicianId}}" }
+        },
+        {
+          "name": "Update Technician",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/technicians/{{technicianId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nimal Perera\",\n  \"specialization\": \"Electrical\",\n  \"phone\": \"0771234567\",\n  \"email\": \"nimal@example.com\",\n  \"availability\": \"BUSY\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Technician",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/technicians/{{technicianId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Maintenance History",
+      "item": [
+        {
+          "name": "Create History Record",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/maintenance-history",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workOrderId\": \"{{workOrderId}}\",\n  \"technicianId\": \"{{technicianId}}\",\n  \"maintenanceType\": \"PREVENTIVE\",\n  \"summary\": \"Routine inspection completed\",\n  \"performedAt\": \"2026-08-20T11:00:00\",\n  \"notes\": \"No issues found\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All History",
+          "request": { "method": "GET", "url": "{{baseUrl}}/maintenance-history" }
+        },
+        {
+          "name": "Get History By Asset",
+          "request": { "method": "GET", "url": "{{baseUrl}}/maintenance-history/asset/{{assetId}}" }
+        },
+        {
+          "name": "Get History By Work Order",
+          "request": { "method": "GET", "url": "{{baseUrl}}/maintenance-history/work-order/{{workOrderId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Summary Report",
+          "request": { "method": "GET", "url": "{{baseUrl}}/maintenance-reports/summary" }
+        }
+      ]
+    }
+  ]
+}
