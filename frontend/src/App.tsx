@@ -1,92 +1,108 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Activity, AlertTriangle, Bell, ChevronDown, CircleHelp, ClipboardCheck, Gauge, LayoutDashboard, Leaf, LogOut, Menu, RefreshCw, Search, Settings, Sun, Wind, Zap, Building2, Wrench, ChartNoAxesCombined, RadioTower } from 'lucide-react';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { api, asArray, endpoints } from './api';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Activity, BarChart3, BellRing, Building2, LayoutDashboard, LogOut, Mail, Menu, ShieldCheck, Wrench, Zap } from 'lucide-react';
+import { get } from './api';
+import { can, ROLE_LABEL } from './format';
+import { AuthProvider, LiveProvider, RefProvider, ToastProvider, useAuth, useLive, usePoll } from './store';
+import { Toasts } from './ui';
+import Admin from './pages/Admin';
+import Alerts from './pages/Alerts';
+import Analytics from './pages/Analytics';
+import Assets from './pages/Assets';
+import Login from './pages/Login';
+import Maintenance from './pages/Maintenance';
+import Monitoring from './pages/Monitoring';
+import Notifications from './pages/Notifications';
+import Overview from './pages/Overview';
 
-type Section = 'Overview' | 'Assets & Facilities' | 'Live Monitoring' | 'Alerts' | 'Maintenance' | 'Analytics & Reports' | 'Notifications';
-type Row = Record<string, any>;
-const nav: { name: Section; icon: any; endpoint?: string; description: string }[] = [
-  { name: 'Overview', icon: LayoutDashboard, description: 'System health and operational snapshot' },
-  { name: 'Assets & Facilities', icon: Building2, endpoint: endpoints.assets, description: 'Renewable generation assets and facilities' },
-  { name: 'Live Monitoring', icon: RadioTower, endpoint: endpoints.readings, description: 'Sensor readings and telemetry' },
-  { name: 'Alerts', icon: AlertTriangle, endpoint: endpoints.alerts, description: 'Operational incidents and threshold breaches' },
-  { name: 'Maintenance', icon: Wrench, endpoint: endpoints.workOrders, description: 'Work orders, technicians and maintenance tasks' },
-  { name: 'Analytics & Reports', icon: ChartNoAxesCombined, endpoint: endpoints.dashboards, description: 'KPIs, energy and asset performance reports' },
-  { name: 'Notifications', icon: Bell, endpoint: endpoints.notifications, description: 'Delivery history and notification status' },
+type PageDef = { id: string; title: string; subtitle: string; icon: ReactNode; roles?: (role?: string) => boolean };
+const PAGES: PageDef[] = [
+  { id: 'overview', title: 'Control room', subtitle: 'Portfolio status at a glance', icon: <LayoutDashboard size={18} /> },
+  { id: 'monitoring', title: 'Live monitoring', subtitle: 'Real-time sensor telemetry', icon: <Activity size={18} /> },
+  { id: 'alerts', title: 'Alerts', subtitle: 'Incidents and detection rules', icon: <BellRing size={18} /> },
+  { id: 'maintenance', title: 'Maintenance', subtitle: 'Work orders and field crew', icon: <Wrench size={18} /> },
+  { id: 'assets', title: 'Assets', subtitle: 'Facilities, equipment and sensors', icon: <Building2 size={18} /> },
+  { id: 'analytics', title: 'Analytics', subtitle: 'KPIs and energy reports', icon: <BarChart3 size={18} /> },
+  { id: 'notifications', title: 'Notifications', subtitle: 'Delivery history', icon: <Mail size={18} /> },
+  { id: 'admin', title: 'Administration', subtitle: 'Users and audit trail', icon: <ShieldCheck size={18} />, roles: can.admin },
 ];
-const trend = [{time:'06:00', output:34},{time:'08:00',output:48},{time:'10:00',output:72},{time:'12:00',output:89},{time:'14:00',output:82},{time:'16:00',output:63},{time:'18:00',output:41},{time:'20:00',output:28}];
-const fmt = (value: any) => value == null ? '—' : typeof value === 'object' ? JSON.stringify(value) : String(value);
-const keyLabel = (key: string) => key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).replace(/Id$/, ' ID');
+
+const currentPage = () => window.location.hash.replace('#/', '') || 'overview';
+
+function Shell() {
+  const { user, signOut } = useAuth();
+  const live = useLive();
+  const [page, setPage] = useState(currentPage);
+  const [menu, setMenu] = useState(false);
+  const [clock, setClock] = useState(new Date());
+  const openAlerts = usePoll(() => get('/v1/alerts').then((a) => a.filter((x) => x.status === 'OPEN').length), [live.tick], 10000);
+
+  useEffect(() => {
+    const onHash = () => setPage(currentPage());
+    window.addEventListener('hashchange', onHash);
+    const t = setInterval(() => setClock(new Date()), 1000);
+    return () => { window.removeEventListener('hashchange', onHash); clearInterval(t); };
+  }, []);
+
+  const go = (id: string) => { window.location.hash = `/${id}`; setMenu(false); };
+  const visible = PAGES.filter((p) => !p.roles || p.roles(user?.role));
+  const active = visible.find((p) => p.id === page) ?? visible[0];
+
+  const body = {
+    overview: <Overview onNavigate={go} />, monitoring: <Monitoring />, alerts: <Alerts />, maintenance: <Maintenance />,
+    assets: <Assets />, analytics: <Analytics />, notifications: <Notifications />, admin: <Admin />,
+  }[active.id];
+
+  return (
+    <div className="shell">
+      <aside className={`sidebar ${menu ? 'open' : ''}`}>
+        <div className="brand"><span className="brand-mark"><Zap size={20} /></span><div><b>REOAGMS</b><small>GRID OPERATIONS</small></div></div>
+        <nav>
+          {visible.map((p) => (
+            <button key={p.id} className={`nav-item ${active.id === p.id ? 'active' : ''}`} onClick={() => go(p.id)}>
+              {p.icon}<span>{p.title}</span>
+              {p.id === 'alerts' && !!openAlerts.data && <em className="count">{openAlerts.data}</em>}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-foot">
+          <div className={`link-state ${live.connected ? 'on' : ''}`}><i />{live.connected ? 'Realtime link established' : 'Realtime link offline'}</div>
+          <div className="user-chip">
+            <span className="avatar">{(user?.name || '?').split(' ').map((s) => s[0]).slice(0, 2).join('')}</span>
+            <div><b>{user?.name}</b><small>{ROLE_LABEL[user?.role || ''] ?? user?.role}</small></div>
+            <button className="icon-btn" onClick={signOut} title="Sign out" aria-label="Sign out"><LogOut size={16} /></button>
+          </div>
+        </div>
+      </aside>
+      {menu && <div className="scrim" onClick={() => setMenu(false)} />}
+
+      <main className="main">
+        <header className="topbar">
+          <button className="icon-btn menu-btn" onClick={() => setMenu(true)} aria-label="Open menu"><Menu size={20} /></button>
+          <div className="title"><h1>{active.title}</h1><p>{active.subtitle}</p></div>
+          <div className="top-right">
+            <span className={`pill ${live.connected ? 'live' : ''}`}><i />{live.connected ? 'LIVE' : 'RECONNECTING'}</span>
+            <span className="clock mono">{clock.toLocaleTimeString([], { hour12: false })}</span>
+          </div>
+          <div className="pulse-line" />
+        </header>
+        <div className="content" key={active.id}>{body}</div>
+      </main>
+    </div>
+  );
+}
+
+function Gate() {
+  const { user } = useAuth();
+  return user ? <RefProvider><LiveProvider><Shell /></LiveProvider></RefProvider> : <Login />;
+}
 
 export default function App() {
-  const [section, setSection] = useState<Section>('Overview');
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
-  const [sidebar, setSidebar] = useState(false);
-  const [user, setUser] = useState(localStorage.getItem('reoagms_user') || 'Operations Admin');
-  const [showLogin, setShowLogin] = useState(!localStorage.getItem('reoagms_token'));
-  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [firstName, setFirstName] = useState(''); const [lastName, setLastName] = useState(''); const [registerMode, setRegisterMode] = useState(false); const [loginError, setLoginError] = useState('');
-  const current = nav.find(n => n.name === section)!;
-  const load = useCallback(async () => {
-    if (!current.endpoint) { setRows([]); setError(''); return; }
-    setLoading(true); setError('');
-    try { const data = await api(current.endpoint); setRows(asArray<Row>(data)); }
-    catch (e: any) { setRows([]); setError(`${e.message}. Check that the backend service is running and that this endpoint is available in the current service version.`); }
-    finally { setLoading(false); }
-  }, [current.endpoint]);
-  useEffect(() => { void load(); }, [load]);
-  const filtered = useMemo(() => rows.filter(row => JSON.stringify(row).toLowerCase().includes(query.toLowerCase())), [rows, query]);
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault(); setLoginError('');
-    try {
-      const result: any = await api(registerMode ? '/v1/auth/register' : '/v1/auth/login', { method: 'POST', body: JSON.stringify(registerMode ? { firstName, lastName, email, password } : { email, password }) });
-      const token = result?.token || result?.accessToken || result?.data?.token || result?.data?.accessToken;
-      if (!token) throw new Error('The login response did not contain a token. Confirm the Identity API response contract.');
-      const displayName = result?.user?.name || [result?.firstName || firstName, result?.lastName || lastName].filter(Boolean).join(' ') || result?.name || email; localStorage.setItem('reoagms_token', token); localStorage.setItem('reoagms_user', displayName); setUser(displayName); setShowLogin(false);
-    } catch (e: any) { setLoginError(e.message || 'Login failed.'); }
-  };
-  const logout = () => { localStorage.removeItem('reoagms_token'); localStorage.removeItem('reoagms_user'); setShowLogin(true); };
-  return <div className="app-shell">
-    <aside className={`sidebar ${sidebar ? 'sidebar-open' : ''}`}>
-      <div className="brand"><div className="brand-mark"><Leaf size={23}/></div><div><strong>REOAGMS</strong><small>ENERGY OPERATIONS</small></div></div>
-      <div className="workspace-label">WORKSPACE <span className="live-dot"/> LIVE</div>
-      <nav>{nav.map(item => { const Icon = item.icon; return <button key={item.name} className={`nav-item ${section === item.name ? 'active' : ''}`} onClick={() => { setSection(item.name); setSidebar(false); }}><Icon size={18}/><span>{item.name}</span>{item.name === 'Alerts' && <i className="nav-count">!</i>}</button>; })}</nav>
-      <div className="sidebar-bottom"><div className="support-card"><CircleHelp size={18}/><div><b>Need help?</b><span>View API & system guide</span></div></div><button className="nav-item" onClick={() => alert('Configure deployment-specific settings through environment variables.')}><Settings size={18}/>Settings</button><div className="profile"><div className="avatar">{user.slice(0,1).toUpperCase()}</div><div className="profile-text"><b>{user}</b><span>Operations team</span></div><button title="Sign out" onClick={logout} className="icon-button"><LogOut size={17}/></button></div></div>
-    </aside>
-    <main className="main-area">
-      <header className="topbar"><div className="top-left"><button className="mobile-menu icon-button" onClick={() => setSidebar(!sidebar)}><Menu size={20}/></button><div className="breadcrumb">Workspace <span>/</span> <b>{section}</b></div></div><div className="top-actions"><div className="system-status"><span className="live-dot"/> System status <b>Connected UI</b></div><button className="icon-button" title="Notifications" onClick={() => setSection('Notifications')}><Bell size={18}/></button><button className="date-pill"><Sun size={15}/> Operations console <ChevronDown size={14}/></button></div></header>
-      <div className="page-content"><div className="page-heading"><div><div className="eyebrow">RENEWABLE ENERGY • OPERATIONS</div><h1>{section === 'Overview' ? 'Good day, operations team' : section}</h1><p>{section === 'Overview' ? 'Your renewable energy portfolio at a glance.' : current.description}</p></div><div className="heading-actions"><button className="button secondary" onClick={() => void load()}><RefreshCw size={16} className={loading ? 'spin' : ''}/> Refresh</button><span className="last-updated">{loading ? 'Updating…' : 'Live API data'}</span></div></div>
-      {section === 'Overview' ? <Overview onNavigate={setSection} /> : <DataSection section={section} rows={filtered} loading={loading} error={error} query={query} setQuery={setQuery} refresh={load} /> }
-      <footer><span>REOAGMS · Renewable Energy Operations, Asset & Grid Management</span><span>API Gateway · <b>localhost:8080</b></span></footer></div>
-    </main>
-    {showLogin && <div className="modal-backdrop"><form className="login-card" onSubmit={handleLogin}><div className="brand-mark large"><Leaf size={26}/></div><div className="eyebrow">SECURE ACCESS</div><h2>{registerMode ? 'Create your account' : 'Welcome back'}</h2><p>{registerMode ? 'Register an account with the Identity Service.' : 'Sign in using an account managed by the Identity Service.'}</p>{registerMode && <div className="name-fields"><label>First name<input required value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name"/></label><label>Last name<input required value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name"/></label></div>}<label>Email address<input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@organization.com"/></label><label>Password<input required type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password"/></label>{loginError && <div className="error-banner">{loginError}</div>}<button className="button primary full" type="submit">{registerMode ? 'Create account' : 'Sign in to REOAGMS'}</button><button type="button" className="demo-link" onClick={() => { setRegisterMode(!registerMode); setLoginError(''); }}>{registerMode ? 'Already have an account? Sign in' : 'New to REOAGMS? Create an account'}</button><button type="button" className="demo-link" onClick={() => setShowLogin(false)}>Continue to dashboard without signing in</button><small className="login-note">Demo mode does not bypass backend authorization. Protected APIs may still require a valid token.</small></form></div>}
-  </div>;
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <Gate />
+        <Toasts />
+      </AuthProvider>
+    </ToastProvider>
+  );
 }
-
-function Overview({onNavigate}:{onNavigate:(s:Section)=>void}) {
-  const [summary,setSummary]=useState<any>({}); const [alerts,setAlerts]=useState<Row[]>([]); const [assets,setAssets]=useState<Row[]>([]); const [orders,setOrders]=useState<Row[]>([]);
-  useEffect(()=>{let active=true; Promise.allSettled([api('/v1/dashboard/summary'),api(endpoints.alerts),api(endpoints.assets),api(endpoints.workOrders)]).then(results=>{if(!active)return; if(results[0].status==='fulfilled'){const value:any=results[0].value;setSummary(value?.data ?? value ?? {});} if(results[1].status==='fulfilled')setAlerts(asArray(results[1].value)); if(results[2].status==='fulfilled')setAssets(asArray(results[2].value)); if(results[3].status==='fulfilled')setOrders(asArray(results[3].value));});return()=>{active=false}},[]);
-  const openAlerts=alerts.filter(a=>!['RESOLVED','CLOSED'].includes(String(a.status||'').toUpperCase()));
-  const stats=[{label:'Registered assets',value:summary.totalAssets ?? summary.assetCount ?? assets.length,change:'Portfolio inventory',icon:Building2,kind:'blue'},{label:'Open alerts',value:summary.openAlerts ?? summary.alertCount ?? openAlerts.length,change:'Requires attention',icon:AlertTriangle,kind:'orange'},{label:'Active work orders',value:summary.activeWorkOrders ?? summary.maintenanceCount ?? orders.filter(o=>['ASSIGNED','IN_PROGRESS'].includes(String(o.status).toUpperCase())).length,change:'Maintenance pipeline',icon:Wrench,kind:'purple'},{label:'Energy generated',value:summary.energyGenerated ?? summary.totalEnergyGenerated ?? '—',change:'Reported by analytics',icon:Zap,kind:'green'}];
-  return <><div className="hero-banner"><div className="hero-copy"><div className="hero-tag"><span className="live-dot"/> OPERATIONS OVERVIEW</div><h2>Powering a more sustainable<br/>tomorrow.</h2><p>Monitor generation assets, identify anomalies and keep your operations moving.</p><button className="button hero-button" onClick={()=>onNavigate('Live Monitoring')}>View monitoring <span>↗</span></button></div><div className="hero-art"><div className="sun-orb"/><div className="wind wind-one"><Wind size={68}/></div><div className="wind wind-two"><Wind size={47}/></div><div className="hill hill-one"/><div className="hill hill-two"/><div className="solar-panel"><div/></div></div></div>
-    <div className="section-label-row"><div><h3>Portfolio snapshot</h3><p>Latest available values from connected services</p></div><span className="live-label"><span className="live-dot"/> LIVE DATA WHEN AVAILABLE</span></div><div className="stat-grid">{stats.map(s=>{const Icon=s.icon;return <div className="stat-card" key={s.label}><div className={`stat-icon ${s.kind}`}><Icon size={19}/></div><div className="stat-label">{s.label}</div><div className="stat-value">{s.value}</div><div className="stat-change">{s.change}</div></div>})}</div>
-    <div className="content-grid"><div className="panel generation-panel"><div className="panel-header"><div><h3>Generation trend</h3><p>Illustrative chart · replace with time-series API data</p></div><span className="chart-period">Today⌄</span></div><div className="chart-area"><ResponsiveContainer width="100%" height="100%"><AreaChart data={trend} margin={{top:10,right:6,left:-20,bottom:0}}><defs><linearGradient id="outputFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#22b887" stopOpacity={0.25}/><stop offset="95%" stopColor="#22b887" stopOpacity={0.01}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaf0f3"/><XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill:'#8795a1',fontSize:11}}/><YAxis axisLine={false} tickLine={false} tick={{fill:'#8795a1',fontSize:11}}/><Tooltip/><Area type="monotone" dataKey="output" stroke="#17a978" strokeWidth={2.5} fill="url(#outputFill)"/></AreaChart></ResponsiveContainer></div><div className="chart-foot"><span><i className="legend-dot"/> Generation index</span><small>Sample visualization until telemetry time-series endpoint is connected.</small></div></div><div className="panel quick-panel"><div className="panel-header"><div><h3>Quick actions</h3><p>Jump into an operational workflow</p></div></div>{[{icon:Activity,title:'Review sensor readings',sub:'Inspect telemetry data',section:'Live Monitoring' as Section},{icon:AlertTriangle,title:'Investigate alerts',sub:'Review active incidents',section:'Alerts' as Section},{icon:ClipboardCheck,title:'Manage work orders',sub:'Track maintenance progress',section:'Maintenance' as Section},{icon:Gauge,title:'View performance reports',sub:'Review KPIs and reports',section:'Analytics & Reports' as Section}].map(a=>{const Icon=a.icon;return <button className="quick-action" key={a.title} onClick={()=>onNavigate(a.section)}><div className="quick-icon"><Icon size={17}/></div><div><b>{a.title}</b><span>{a.sub}</span></div><span className="arrow">↗</span></button>})}</div></div>
-    <div className="section-label-row table-section-heading"><div><h3>Recent operational alerts</h3><p>Most recent records returned by Monitoring Service</p></div><button className="text-button" onClick={()=>onNavigate('Alerts')}>View all alerts ↗</button></div><div className="panel table-panel"><div className="table-wrap"><table><thead><tr><th>Alert</th><th>Asset</th><th>Severity</th><th>Status</th><th>Timestamp</th></tr></thead><tbody>{openAlerts.slice(0,5).map((a,i)=><tr key={a.id||i}><td><b>{a.message||a.name||'Alert record'}</b><small>{a.id||'ID unavailable'}</small></td><td>{a.assetName||a.assetId||'—'}</td><td><Status value={a.severity}/></td><td><Status value={a.status}/></td><td>{a.timestamp||a.createdAt||'—'}</td></tr>)}{!openAlerts.length&&<tr><td colSpan={5} className="empty-cell">No alert records available. Confirm Monitoring Service is running and has data.</td></tr>}</tbody></table></div></div>
-  </>;
-}
-
-function DataSection({section,rows,loading,error,query,setQuery,refresh}:{section:Section;rows:Row[];loading:boolean;error:string;query:string;setQuery:(s:string)=>void;refresh:()=>void}) {
-  const [showCreate,setShowCreate]=useState(false); const [payload,setPayload]=useState('{\n  \"name\": \"Example record\"\n}'); const [actionError,setActionError]=useState(''); const current=nav.find(n=>n.name===section)!;
-  const columns=useMemo(()=>{const keys=new Set<string>(); rows.slice(0,10).forEach(r=>Object.keys(r||{}).forEach(k=>{if(typeof r[k]!=='object'||r[k]===null)keys.add(k)})); return [...keys].slice(0,6)},[rows]);
-  const create=async()=>{if(!current.endpoint)return;setActionError('');try{const body=JSON.parse(payload);await api(current.endpoint,{method:'POST',body:JSON.stringify(body)});setShowCreate(false);refresh()}catch(e:any){setActionError(e instanceof SyntaxError?'Request body must be valid JSON.':e.message)}};
-  return <><div className="data-toolbar"><div className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={`Search ${section.toLowerCase()}…`}/></div><div className="toolbar-right"><span className="record-count">{rows.length} records loaded</span><button className="button secondary" onClick={refresh}><RefreshCw size={15}/> Refresh data</button>{current.endpoint && <button className="button primary" onClick={()=>setShowCreate(!showCreate)}>＋ Create record</button>}</div></div>
-    {error&&<div className="error-banner"><AlertTriangle size={18}/><div><b>Could not load {section.toLowerCase()}</b><span>{error}</span></div></div>}
-    {showCreate&&<div className="panel create-panel"><div className="panel-header"><div><h3>Create {section.toLowerCase()} record</h3><p>Use the request DTO expected by the selected service.</p></div><button className="icon-button" onClick={()=>setShowCreate(false)}>×</button></div><textarea value={payload} onChange={e=>setPayload(e.target.value)} spellCheck={false}/>{actionError&&<div className="error-banner">{actionError}</div>}<div className="form-actions"><button className="button secondary" onClick={()=>setShowCreate(false)}>Cancel</button><button className="button primary" onClick={create}>Submit to API</button></div></div>}
-    <div className="panel data-panel"><div className="panel-header"><div><h3>{section} records</h3><p>Data is fetched live from the REOAGMS API Gateway.</p></div><span className="api-badge">GET {current.endpoint||'/v1/dashboard/summary'}</span></div>{loading?<div className="loading-state"><RefreshCw className="spin" size={21}/> Loading service data…</div>:rows.length===0?<div className="empty-state"><div className="empty-icon"><Activity size={23}/></div><h3>{error?'Service data unavailable':'No records to display'}</h3><p>{error?'Check service logs, gateway routes and database connectivity.':'The endpoint returned no records, or this module has not been populated yet.'}</p><button className="button secondary" onClick={refresh}>Try again</button></div>:<div className="table-wrap"><table><thead><tr>{columns.map(c=><th key={c}>{keyLabel(c)}</th>)}</tr></thead><tbody>{filteredRows(rows,columns).map((row,i)=><tr key={row.id||i}>{columns.map(c=><td key={c}>{c.toLowerCase().includes('status')||c.toLowerCase().includes('severity')?<Status value={row[c]}/>:<span className="cell-text" title={fmt(row[c])}>{fmt(row[c])}</span>}</td>)}</tr>)}</tbody></table></div>}</div>
-    <div className="info-note"><CircleHelp size={17}/><span>CRUD actions are only enabled where the service supports the corresponding endpoint. Create requests require the service's actual DTO fields; use the service README/OpenAPI docs for the exact contract.</span></div>
-  </>;
-}
-function filteredRows(rows:Row[],columns:string[]){return rows.map(r=>({...r})).filter(r=>columns.length>0)}
-function Status({value}:{value:any}){const v=String(value||'UNKNOWN');const kind=v.toLowerCase().includes('high')||v.toLowerCase().includes('critical')||v.toLowerCase()==='open'||v.toLowerCase()==='failed'?'danger':v.toLowerCase().includes('acknowledged')||v.toLowerCase().includes('progress')||v.toLowerCase()==='retrying'?'warning':v.toLowerCase().includes('resolved')||v.toLowerCase().includes('completed')||v.toLowerCase()==='sent'?'success':'neutral';return <span className={`status-pill ${kind}`}><i/>{v.replaceAll('_',' ')}</span>}
