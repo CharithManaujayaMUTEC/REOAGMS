@@ -6,7 +6,7 @@ This script gives the **exact words** each member says. The team deck `REOAGMS-T
 - Stack running (`docker compose up -d`), browser signed in as `admin@reoagms.com` on http://localhost:5173, a second tab on Grafana. Zoom 100 %, notifications silenced.
 - Two minutes earlier, open the Alerts page and resolve the open alerts; the simulator then raises fresh events within about a minute.
 - Rehearse with a stopwatch. Hand over in one sentence, as written.
-- If the fault has not arrived by 1:30, Govindu says "the simulator injects one every minute" and Thurunu uses the newest order already on the board.
+- If the fault has not arrived by 1:20, Govindu says "the simulator injects one every minute" and Thurunu uses the newest order already on the board.
 
 ## Credentials
 | Use | Login |

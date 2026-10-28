@@ -2,55 +2,55 @@
 
 | Member | Slides | Time on stage | Shows in the live demo |
 |---|---|---|---|
-| **Charith** | 1, 2, 8, 9 | 110 s | Login and Control room; executive read-only sign-in; Grafana |
-| **Nemal** | 3 | 30 s | Assets page |
-| **Govindu** | 4 | 45 s | Live monitoring and the alert |
-| **Thurunu** | 5 | 35 s | Maintenance board |
-| **Yasiru** | 6 | 30 s | Notifications page |
-| **Sachinthana** | 7 | 40 s | Analytics report and CSV export |
-| **All members** | 10 | 10 s | Closing thank-you |
+| **Charith** | 1, 2, 9 | 49 s | Login and Control room; Grafana |
+| **Nemal** | 3, 8 | 49 s | Assets page; executive read-only sign-in |
+| **Govindu** | 4 | 49 s | Live monitoring and the alert |
+| **Thurunu** | 5 | 49 s | Maintenance board |
+| **Yasiru** | 6 | 49 s | Notifications page |
+| **Sachinthana** | 7 | 49 s | Analytics report and CSV export |
+| **All members** | 10 | 6 s | Closing thank-you |
 
-Total spoken text: about 506 words, under 5 minutes at a calm pace, with a few seconds spare for clicks. Each member's part below is complete: read only your own section.
+Total spoken text: about 419 words, under 5 minutes at a calm pace, with a few seconds spare for clicks. Each member's part below is complete: read only your own section.
 
 ## The exact words, per member
 
 # Charith
 
-### Slide 1 · 0:00–0:10
+### Slide 1 · 0:00–0:08
 
 *On screen:* Title slide
 
 **Charith says:** Good morning. We are presenting REOAGMS, a platform that monitors and maintains renewable energy assets in real time.
 
-### Slide 2 · 0:10–0:45
+### Slide 2 · 0:08–0:33
 
 *On screen:* Console: sign in as admin, then the Control room
 
-**Charith says:** REOAGMS is six Spring Boot microservices behind one API gateway, connected by RabbitMQ events, each with its own PostgreSQL database. I sign in as the administrator; the gateway validates my token and role. This is the control room: live generation, open alerts, device health and an hourly energy curve. Nemal will show where this data comes from.
+**Charith says:** REOAGMS is six Spring Boot microservices behind one API gateway, connected by RabbitMQ events, each with its own PostgreSQL database. I sign in as the administrator, and this is the control room with live data. Nemal will show where it comes from.
 
-### Slide 8 · 3:45–4:15
-
-*On screen:* Sign out, sign in as executive@reoagms.com, show the read-only pages
-
-**Charith says:** Security is enforced at the gateway. Five roles carry different rights. I sign in as the executive: there are no action buttons, and the API itself answers 403 for any write. Every login and user change is recorded in the audit log. Quality is built in as well, with sixty test methods across the services.
-
-### Slide 9 · 4:15–4:50
+### Slide 9 · 4:38–4:54
 
 *On screen:* Grafana tab, then back to the slide
 
-**Charith says:** Operations are visible in Grafana, where Prometheus scrapes all seven services and shows platform health. Behind the demo are sixty test methods, validation and error handling in every service, and a versioned event contract that keeps the services compatible. The whole system starts with one docker compose command.
+**Charith says:** Grafana shows platform health from Prometheus across all seven services. Sixty tests protect the services, and one docker compose command starts everything.
 
 # Nemal
 
-### Slide 3 · 0:45–1:15
+### Slide 3 · 0:33–1:00
 
 *On screen:* Assets page: switch tabs, open Add, then cancel
 
-**Nemal says:** Thank you, Charith. The Asset Service owns the registry: five facilities, eleven assets and thirty-two sensors across solar, wind, hydro, battery and tidal. Lists are searched and paged on the server, and every form is validated, so a blank name is rejected. Only administrators and managers can change data. Every other service refers to these assets by ID. Govindu will show them producing live data.
+**Nemal says:** Thank you, Charith. The Asset Service owns the registry: five facilities, eleven assets and thirty-two sensors. Lists are searched and paged on the server, and every form is validated, so a blank name is rejected. Govindu will show these assets producing live data.
+
+### Slide 8 · 4:16–4:38
+
+*On screen:* Sign out, sign in as executive@reoagms.com, show the read-only pages
+
+**Nemal says:** Access is enforced at the gateway, and five roles carry different rights. I sign in as the executive: there are no action buttons, and the API itself refuses any write. Charith will close.
 
 # Govindu
 
-### Slide 4 · 1:15–2:00
+### Slide 4 · 1:00–1:49
 
 *On screen:* Live monitoring page, then the toast and the Alerts page
 
@@ -58,7 +58,7 @@ Total spoken text: about 506 words, under 5 minutes at a calm pace, with a few s
 
 # Thurunu
 
-### Slide 5 · 2:00–2:35
+### Slide 5 · 1:49–2:38
 
 *On screen:* Maintenance board: newest card, Assign, Start, Complete
 
@@ -66,7 +66,7 @@ Total spoken text: about 506 words, under 5 minutes at a calm pace, with a few s
 
 # Yasiru
 
-### Slide 6 · 2:35–3:05
+### Slide 6 · 2:38–3:27
 
 *On screen:* Notifications page
 
@@ -74,15 +74,15 @@ Total spoken text: about 506 words, under 5 minutes at a calm pace, with a few s
 
 # Sachinthana
 
-### Slide 7 · 3:05–3:45
+### Slide 7 · 3:27–4:16
 
 *On screen:* Analytics page: pick a facility, Generate, then export CSV
 
-**Sachinthana says:** The Analytics Service calls the other services over REST and never touches their databases. For this facility it integrates average power into kilowatt-hours for each hour, and calculates availability, efficiency and capacity factor. I generate an energy report for the last day and export it as CSV for management. Executives see all of this read-only. Charith will close with security.
+**Sachinthana says:** The Analytics Service calls the other services over REST and never touches their databases. For this facility it integrates average power into kilowatt-hours for each hour, and calculates availability, efficiency and capacity factor. I generate an energy report for the last day and export it as CSV for management. Nemal will show who is allowed to see it.
 
 # All members
 
-### Slide 10 · 4:50–5:00
+### Slide 10 · 4:54–5:00
 
 *On screen:* Thank you slide
 

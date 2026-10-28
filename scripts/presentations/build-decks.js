@@ -15,58 +15,58 @@ const COURSE = 'EC8208 Software Architecture  ·  University of Ruhuna';
 // Each service slide: flow (3-4 steps), stats (3), live cue, spoken words.
 const SLIDES = [
   {
-    kind: 'title', time: '0:00–0:10', who: 'Charith', screen: 'Title slide',
+    kind: 'title', time: '0:00–0:08', who: 'Charith', screen: 'Title slide',
     say: 'Good morning. We are presenting REOAGMS, a platform that monitors and maintains renewable energy assets in real time.',
   },
   {
-    kind: 'arch', time: '0:10–0:45', who: 'Charith', screen: 'Console: sign in as admin, then the Control room',
-    say: 'REOAGMS is six Spring Boot microservices behind one API gateway, connected by RabbitMQ events, each with its own PostgreSQL database. I sign in as the administrator; the gateway validates my token and role. This is the control room: live generation, open alerts, device health and an hourly energy curve. Nemal will show where this data comes from.',
+    kind: 'arch', time: '0:08–0:33', who: 'Charith', screen: 'Console: sign in as admin, then the Control room',
+    say: 'REOAGMS is six Spring Boot microservices behind one API gateway, connected by RabbitMQ events, each with its own PostgreSQL database. I sign in as the administrator, and this is the control room with live data. Nemal will show where it comes from.',
   },
   {
-    kind: 'svc', n: '03', who: 'Nemal', name: 'Asset Service', time: '0:45–1:15', screen: 'Assets page: switch tabs, open Add, then cancel',
+    kind: 'svc', n: '03', who: 'Nemal', name: 'Asset Service', time: '0:33–1:00', screen: 'Assets page: switch tabs, open Add, then cancel',
     head: 'The registry every service relies on',
     flow: [['Facility', '5 types'], ['Asset', '7 types'], ['Sensor', '9 metrics']],
     stats: [['5 · 11 · 32', 'facilities · assets · sensors'], ['Server-side', 'search and paging'], ['Validated', 'every form']],
-    say: 'Thank you, Charith. The Asset Service owns the registry: five facilities, eleven assets and thirty-two sensors across solar, wind, hydro, battery and tidal. Lists are searched and paged on the server, and every form is validated, so a blank name is rejected. Only administrators and managers can change data. Every other service refers to these assets by ID. Govindu will show them producing live data.',
+    say: 'Thank you, Charith. The Asset Service owns the registry: five facilities, eleven assets and thirty-two sensors. Lists are searched and paged on the server, and every form is validated, so a blank name is rejected. Govindu will show these assets producing live data.',
   },
   {
-    kind: 'svc', n: '04', who: 'Govindu', name: 'Monitoring Service', time: '1:15–2:00', screen: 'Live monitoring page, then the toast and the Alerts page',
+    kind: 'svc', n: '04', who: 'Govindu', name: 'Monitoring Service', time: '1:00–1:49', screen: 'Live monitoring page, then the toast and the Alerts page',
     head: 'From a sensor reading to an instant alert',
     flow: [['Reading', 'every few seconds'], ['Rule check', 'threshold'], ['Alert', 'one per asset'], ['RabbitMQ', 'event']],
     stats: [['16,000+', 'readings stored'], ['7', 'alert rules'], ['10 s', 'Redis cached dashboard']],
     say: 'Thanks, Nemal. The Monitoring Service receives a reading from every sensor and checks it against our alert rules. This tile is a live sensor and the dashed line is its threshold. The simulator has just injected a fault, and here is the alert, instantly. One alert is stored, one event goes to RabbitMQ, and the browser is updated over WebSocket. That same event is now reaching Thurunu.',
   },
   {
-    kind: 'svc', n: '05', who: 'Thurunu', name: 'Maintenance Service', time: '2:00–2:35', screen: 'Maintenance board: newest card, Assign, Start, Complete',
+    kind: 'svc', n: '05', who: 'Thurunu', name: 'Maintenance Service', time: '1:49–2:38', screen: 'Maintenance board: newest card, Assign, Start, Complete',
     head: 'Faults become tracked work automatically',
     flow: [['Alert event', 'high or critical'], ['Work order', 'created'], ['Technician', 'assigned'], ['Completed', 'in history']],
     stats: [['0 clicks', 'to open a corrective order'], ['4', 'technicians'], ['1', 'active order per asset']],
     say: 'Yes. The Maintenance Service received the same event and, because the severity is high, it opened a corrective work order by itself. Here it is on the board. I assign a technician, start the work and complete it. Each step is its own endpoint, and the finished job is saved to the maintenance history. Yasiru will show how people are informed.',
   },
   {
-    kind: 'svc', n: '06', who: 'Yasiru', name: 'Notification Service', time: '2:35–3:05', screen: 'Notifications page',
+    kind: 'svc', n: '06', who: 'Yasiru', name: 'Notification Service', time: '2:38–3:27', screen: 'Notifications page',
     head: 'Every alert delivered and recorded',
     flow: [['Queue', 'durable'], ['Consumer', 'schema check'], ['Channels', 'email · push'], ['History', 'stored']],
     stats: [['Instant', 'in-app push'], ['3', 'automatic retries'], ['100%', 'deliveries recorded']],
     say: 'The Notification Service read the same alert from its own RabbitMQ queue. In this history, the in-app push was delivered instantly, and every email attempt is stored with its status, retry count and reason. A scheduler retries up to three times, I can retry any message here, and failing messages go to a dead-letter queue, so nothing is lost. Sachinthana will turn all this into reports.',
   },
   {
-    kind: 'svc', n: '07', who: 'Sachinthana', name: 'Analytics Service', time: '3:05–3:45', screen: 'Analytics page: pick a facility, Generate, then export CSV',
+    kind: 'svc', n: '07', who: 'Sachinthana', name: 'Analytics Service', time: '3:27–4:16', screen: 'Analytics page: pick a facility, Generate, then export CSV',
     head: 'Trustworthy energy figures and reports',
     flow: [['Source APIs', 'REST only'], ['Calculation', 'power to kWh'], ['Reports', 'stored'], ['CSV', 'export']],
     stats: [['kWh', 'integrated from power'], ['6', 'KPIs with targets'], ['5 + 5', 'energy and performance reports']],
-    say: 'The Analytics Service calls the other services over REST and never touches their databases. For this facility it integrates average power into kilowatt-hours for each hour, and calculates availability, efficiency and capacity factor. I generate an energy report for the last day and export it as CSV for management. Executives see all of this read-only. Charith will close with security.',
+    say: 'The Analytics Service calls the other services over REST and never touches their databases. For this facility it integrates average power into kilowatt-hours for each hour, and calculates availability, efficiency and capacity factor. I generate an energy report for the last day and export it as CSV for management. Nemal will show who is allowed to see it.',
   },
   {
-    kind: 'rbac', time: '3:45–4:15', who: 'Charith', screen: 'Sign out, sign in as executive@reoagms.com, show the read-only pages',
-    say: 'Security is enforced at the gateway. Five roles carry different rights. I sign in as the executive: there are no action buttons, and the API itself answers 403 for any write. Every login and user change is recorded in the audit log. Quality is built in as well, with sixty test methods across the services.',
+    kind: 'rbac', time: '4:16–4:38', who: 'Nemal', screen: 'Sign out, sign in as executive@reoagms.com, show the read-only pages',
+    say: 'Access is enforced at the gateway, and five roles carry different rights. I sign in as the executive: there are no action buttons, and the API itself refuses any write. Charith will close.',
   },
   {
-    kind: 'ops', time: '4:15–4:50', who: 'Charith', screen: 'Grafana tab, then back to the slide',
-    say: 'Operations are visible in Grafana, where Prometheus scrapes all seven services and shows platform health. Behind the demo are sixty test methods, validation and error handling in every service, and a versioned event contract that keeps the services compatible. The whole system starts with one docker compose command.',
+    kind: 'ops', time: '4:38–4:54', who: 'Charith', screen: 'Grafana tab, then back to the slide',
+    say: 'Grafana shows platform health from Prometheus across all seven services. Sixty tests protect the services, and one docker compose command starts everything.',
   },
   {
-    kind: 'end', time: '4:50–5:00', who: 'All members', screen: 'Thank you slide',
+    kind: 'end', time: '4:54–5:00', who: 'All members', screen: 'Thank you slide',
     say: 'Thank you. We are happy to take your questions.',
   },
 ];
@@ -143,7 +143,7 @@ function liveChip(pres, s, text) {
       });
       liveChip(pres, s, d.screen.split(':')[0].split(',')[0]);
     } else if (d.kind === 'rbac') {
-      frame(pres, s, '08 · CHARITH · SECURITY', 'Five roles, enforced at the gateway', num, d.time);
+      frame(pres, s, '08 · NEMAL · SECURITY', 'Five roles, enforced at the gateway', num, d.time);
       ROLES.forEach(([role, can], i) => {
         const y = 1.7 + i * 0.5;
         s.addShape(pres.ShapeType.roundRect, { x: 0.6, y, w: 8.8, h: 0.42, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.06 });
@@ -180,7 +180,7 @@ function liveChip(pres, s, text) {
   order.forEach((who) => {
     const mine = SLIDES.map((d, i) => ({ d, n: i + 1 })).filter((x) => x.d.who === who);
     const total = mine.reduce((a, x) => { const [s, e] = secs(x.d.time); return a + e - s; }, 0);
-    const SHOWS = { Charith: 'Login and Control room; executive read-only sign-in; Grafana', Nemal: 'Assets page', Govindu: 'Live monitoring and the alert', Thurunu: 'Maintenance board', Yasiru: 'Notifications page', Sachinthana: 'Analytics report and CSV export', 'All members': 'Closing thank-you' };
+    const SHOWS = { Charith: 'Login and Control room; Grafana', Nemal: 'Assets page; executive read-only sign-in', Govindu: 'Live monitoring and the alert', Thurunu: 'Maintenance board', Yasiru: 'Notifications page', Sachinthana: 'Analytics report and CSV export', 'All members': 'Closing thank-you' };
     const shows = SHOWS[who];
     md += `| **${who}** | ${mine.map((x) => x.n).join(', ')} | ${total} s | ${shows} |\n`;
   });
