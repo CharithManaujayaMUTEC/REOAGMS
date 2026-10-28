@@ -11,7 +11,7 @@ const css = `body{font-family:Calibri,Arial,sans-serif;color:#22304a;font-size:1
 h1{font-family:Cambria,serif;color:#1b2a49;font-size:24pt;margin:0 0 6pt}h2{font-family:Cambria,serif;color:#1b2a49;font-size:15pt;margin:18pt 0 6pt}
 code{background:#eef2f8;padding:1px 4px;border-radius:3px;font-size:9.5pt}pre{background:#eef2f8;padding:8pt;border-radius:4px;font-size:9pt;white-space:pre-wrap}
 table{border-collapse:collapse;width:100%;margin:8pt 0;font-size:10pt}th{background:#1b2a49;color:#fff;text-align:left}th,td{border:1px solid #c9d3e0;padding:5pt 7pt;vertical-align:top}tr:nth-child(even) td{background:#f5f8fc}
-strong{color:#1b2a49}ul,ol{margin:4pt 0 4pt 18pt}`;
+h1+h3{margin-top:6pt}h1{page-break-before:always}strong{color:#1b2a49}ul,ol{margin:4pt 0 4pt 18pt}`;
 const browser = await puppeteer.launch({ executablePath: exe, headless: true, args: ['--no-sandbox'] });
 for (const name of ['DEMO_SCRIPT', 'TEAM_GUIDE']) {
   const parts = name === 'DEMO_SCRIPT' ? ['DEMO_SCRIPT', 'live'] : [name];

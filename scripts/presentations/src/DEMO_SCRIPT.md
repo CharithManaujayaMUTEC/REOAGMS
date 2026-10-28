@@ -16,5 +16,4 @@ This script gives the **exact words** each member says. The team deck `REOAGMS-T
 | RabbitMQ http://localhost:15672 | `reoagms` / `reoagms_password` |
 | Prometheus http://localhost:9090 | no login |
 
-## Speaking order and time
 

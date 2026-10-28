@@ -62,12 +62,12 @@ const SLIDES = [
     say: 'Security is enforced at the gateway. Five roles carry different rights. I sign in as the executive: there are no action buttons, and the API itself answers 403 for any write. Every login and user change is recorded in the audit log. Quality is built in as well, with sixty test methods across the services.',
   },
   {
-    kind: 'ops', time: '4:15–4:50', who: 'All members', screen: 'Grafana tab, then back to the slide',
-    say: 'CHARITH: Operations are visible in Grafana, where Prometheus scrapes all seven services. NEMAL: Validation and tests protect every API. GOVINDU: Rules are data, so thresholds change without code. THURUNU: Every fault ends as recorded maintenance. YASIRU: Every notification is stored and can be retried. SACHINTHANA: Reports turn operations into decisions.',
+    kind: 'ops', time: '4:15–4:50', who: 'Charith', screen: 'Grafana tab, then back to the slide',
+    say: 'Operations are visible in Grafana, where Prometheus scrapes all seven services and shows platform health. Behind the demo are sixty test methods, validation and error handling in every service, and a versioned event contract that keeps the services compatible. The whole system starts with one docker compose command.',
   },
   {
     kind: 'end', time: '4:50–5:00', who: 'All members', screen: 'Thank you slide',
-    say: 'ALL: Thank you. We are happy to take your questions.',
+    say: 'Thank you. We are happy to take your questions.',
   },
 ];
 
@@ -152,7 +152,7 @@ function liveChip(pres, s, text) {
       });
       liveChip(pres, s, 'executive sign-in, read-only');
     } else if (d.kind === 'ops') {
-      frame(pres, s, '09 · ALL MEMBERS · OPERATIONS AND QUALITY', 'Observable, tested, one command to run', num, d.time);
+      frame(pres, s, '09 · CHARITH · OPERATIONS AND QUALITY', 'Observable, tested, one command to run', num, d.time);
       const sw = (8.8 - 3 * 0.3) / 4;
       OPS.forEach(([big, label], i) => {
         const x = 0.6 + i * (sw + 0.3);
@@ -172,16 +172,25 @@ function liveChip(pres, s, text) {
   await pres.writeFile({ fileName: path.join(OUT, 'REOAGMS-Team-Presentation.pptx') });
   console.log('built deck:', SLIDES.length, 'slides');
 
-  // Word-for-word script (rendered into DEMO_SCRIPT.pdf after the fixed header)
+  // Word-for-word script, separated per member
   const words = SLIDES.reduce((a, d) => a + d.say.split(/\s+/).length, 0);
-  let md = `| Slide | Time | Speaker |\n|---|---|---|\n`;
-  SLIDES.forEach((d, i) => { md += `| ${i + 1} | ${d.time} | ${d.who} |\n`; });
-  md += `\nTotal spoken text: about ${words} words, which is under 5 minutes at a calm pace, leaving a few seconds for clicks.\n\n## The exact words\n\n`;
-  SLIDES.forEach((d, i) => {
-    md += `### Slide ${i + 1} · ${d.time} · ${d.who}\n\n*On screen:* ${d.screen}\n\n`;
-    if (d.say.includes('CHARITH:') || d.say.startsWith('ALL:')) {
-      d.say.split(/\s(?=[A-Z]{3,}:)/).forEach((p) => { const [who, ...r] = p.split(': '); md += `**${who.charAt(0) + who.slice(1).toLowerCase()} says:** ${r.join(': ')}\n\n`; });
-    } else md += `**${d.who} says:** ${d.say}\n\n`;
+  const order = [...new Set(SLIDES.map((d) => d.who))];
+  let md = `## Who does what\n\n| Member | Slides | Time on stage | Shows in the live demo |\n|---|---|---|---|\n`;
+  const secs = (tm) => tm.split('–').map((x) => { const [m, s] = x.split(':'); return +m * 60 + +s; });
+  order.forEach((who) => {
+    const mine = SLIDES.map((d, i) => ({ d, n: i + 1 })).filter((x) => x.d.who === who);
+    const total = mine.reduce((a, x) => { const [s, e] = secs(x.d.time); return a + e - s; }, 0);
+    const SHOWS = { Charith: 'Login and Control room; executive read-only sign-in; Grafana', Nemal: 'Assets page', Govindu: 'Live monitoring and the alert', Thurunu: 'Maintenance board', Yasiru: 'Notifications page', Sachinthana: 'Analytics report and CSV export', 'All members': 'Closing thank-you' };
+    const shows = SHOWS[who];
+    md += `| **${who}** | ${mine.map((x) => x.n).join(', ')} | ${total} s | ${shows} |\n`;
+  });
+  md += `\nTotal spoken text: about ${words} words, under 5 minutes at a calm pace, with a few seconds spare for clicks. Each member's part below is complete: read only your own section.\n\n## The exact words, per member\n\n`;
+  order.forEach((who) => {
+    const mine = SLIDES.map((d, i) => ({ d, n: i + 1 })).filter((x) => x.d.who === who);
+    md += `# ${who}\n\n`;
+    mine.forEach(({ d, n }) => {
+      md += `### Slide ${n} · ${d.time}\n\n*On screen:* ${d.screen}\n\n**${who} says:** ${d.say}\n\n`;
+    });
   });
   fs.writeFileSync(path.join(__dirname, 'src', 'live.md'), md);
   console.log('words', words);
