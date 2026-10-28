@@ -263,3 +263,40 @@ Application port: 8085
 
 Do not expose real passwords or secrets during the presentation. Explain that credentials should be moved to environment variables or a secrets manager in production.
 
+## 9. API Endpoints
+
+### Notification APIs
+
+```text
+POST   /api/v1/notifications
+GET    /api/v1/notifications
+GET    /api/v1/notifications/{id}
+DELETE /api/v1/notifications/{id}
+POST   /api/v1/notifications/{id}/retry
+```
+
+### Email APIs
+
+```text
+POST /api/v1/email
+```
+
+### SMS APIs
+
+```text
+POST   /api/v1/sms
+GET    /api/v1/sms
+GET    /api/v1/sms/{id}
+DELETE /api/v1/sms/{id}
+```
+
+### Email Template APIs
+
+```text
+POST   /api/v1/email-templates
+GET    /api/v1/email-templates
+GET    /api/v1/email-templates/{id}
+PUT    /api/v1/email-templates/{id}
+DELETE /api/v1/email-templates/{id}
+```
+
