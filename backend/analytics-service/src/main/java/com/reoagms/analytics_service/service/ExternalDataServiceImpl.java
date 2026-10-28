@@ -106,6 +106,10 @@ public class ExternalDataServiceImpl implements ExternalDataService {
             LocalDateTime from,
             LocalDateTime to) {
         builder.path(path);
+        if (path.endsWith("/sensor-readings")) {
+            // Only generation readings contribute to energy figures; other metrics are not energy.
+            builder.queryParam("metricType", "POWER");
+        }
         if (facilityId != null) {
             builder.queryParam("facilityId", facilityId);
         }

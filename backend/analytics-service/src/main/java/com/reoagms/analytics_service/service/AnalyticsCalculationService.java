@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AnalyticsCalculationService {
@@ -35,10 +36,8 @@ public class AnalyticsCalculationService {
             LocalDateTime from,
             LocalDateTime to,
             BigDecimal requestedExpectedEnergy) {
-        List<BigDecimal> values = readings.stream()
-                .filter(reading -> reading.getValue() != null)
-                .map(this::toKilowattHours)
-                .toList();
+        // Energy per hour: average power of each sensor within the hour, summed across sensors.
+        List<BigDecimal> values = new ArrayList<>(energyByBucket(readings, AggregationPeriod.HOUR).values());
 
         BigDecimal total = values.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal average = values.isEmpty()
@@ -125,14 +124,7 @@ public class AnalyticsCalculationService {
 
     public List<TimeSeriesPoint> groupReadings(
             List<SensorReadingData> readings, AggregationPeriod aggregationPeriod) {
-        Map<LocalDateTime, BigDecimal> grouped = new LinkedHashMap<>();
-        readings.stream()
-                .filter(reading -> reading.getTimestamp() != null && reading.getValue() != null)
-                .sorted(Comparator.comparing(SensorReadingData::getTimestamp))
-                .forEach(reading -> grouped.merge(
-                        bucket(reading.getTimestamp(), aggregationPeriod),
-                        toKilowattHours(reading),
-                        BigDecimal::add));
+        Map<LocalDateTime, BigDecimal> grouped = energyByBucket(readings, aggregationPeriod);
 
         List<TimeSeriesPoint> points = new ArrayList<>();
         grouped.forEach((period, value) -> points.add(TimeSeriesPoint.builder()
@@ -141,6 +133,63 @@ public class AnalyticsCalculationService {
                 .unit("kWh")
                 .build()));
         return points;
+    }
+
+
+    /**
+     * Converts raw readings into energy (kWh) per time bucket. Power readings (kW/MW/W) are averaged per sensor
+     * within the bucket and multiplied by the bucket length; readings already expressed as energy are summed.
+     */
+    private Map<LocalDateTime, BigDecimal> energyByBucket(List<SensorReadingData> readings, AggregationPeriod period) {
+        Map<LocalDateTime, Map<UUID, List<SensorReadingData>>> grouped = new java.util.TreeMap<>();
+        readings.stream()
+                .filter(r -> r.getTimestamp() != null && r.getValue() != null)
+                .forEach(r -> grouped
+                        .computeIfAbsent(bucket(r.getTimestamp(), period), k -> new LinkedHashMap<>())
+                        .computeIfAbsent(r.getSensorId(), k -> new ArrayList<>())
+                        .add(r));
+
+        Map<LocalDateTime, BigDecimal> result = new LinkedHashMap<>();
+        grouped.forEach((bucketStart, bySensor) -> {
+            BigDecimal hours = bucketHours(period, bucketStart);
+            BigDecimal energy = BigDecimal.ZERO;
+            for (List<SensorReadingData> sensorReadings : bySensor.values()) {
+                if (isPowerUnit(sensorReadings.get(0).getUnit())) {
+                    BigDecimal sum = sensorReadings.stream().map(this::toKilowatts).reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal avg = sum.divide(BigDecimal.valueOf(sensorReadings.size()), SCALE + 2, RoundingMode.HALF_UP);
+                    energy = energy.add(avg.multiply(hours));
+                } else {
+                    energy = energy.add(sensorReadings.stream().map(this::toKilowattHours).reduce(BigDecimal.ZERO, BigDecimal::add));
+                }
+            }
+            result.put(bucketStart, energy);
+        });
+        return result;
+    }
+
+    private BigDecimal bucketHours(AggregationPeriod period, LocalDateTime start) {
+        return switch (period) {
+            case HOUR -> BigDecimal.ONE;
+            case DAY -> BigDecimal.valueOf(24);
+            case WEEK -> BigDecimal.valueOf(24 * 7);
+            case MONTH -> BigDecimal.valueOf(24L * start.toLocalDate().lengthOfMonth());
+        };
+    }
+
+    private boolean isPowerUnit(String unit) {
+        if (unit == null) return false;
+        String u = unit.toUpperCase(Locale.ROOT).replace(" ", "");
+        return u.equals("KW") || u.equals("MW") || u.equals("W") || u.equals("GW");
+    }
+
+    private BigDecimal toKilowatts(SensorReadingData reading) {
+        String u = reading.getUnit().toUpperCase(Locale.ROOT).replace(" ", "");
+        return switch (u) {
+            case "W" -> reading.getValue().divide(BigDecimal.valueOf(1000), SCALE + 2, RoundingMode.HALF_UP);
+            case "MW" -> reading.getValue().multiply(BigDecimal.valueOf(1000));
+            case "GW" -> reading.getValue().multiply(BigDecimal.valueOf(1_000_000));
+            default -> reading.getValue();
+        };
     }
 
     public BigDecimal normalizeReading(SensorReadingData reading) {

@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/analytics")
 @RequiredArgsConstructor
 public class AnalyticsController {
 
