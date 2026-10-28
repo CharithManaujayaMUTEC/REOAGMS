@@ -13,4 +13,6 @@ public interface AlertRepository extends JpaRepository<Alert, UUID>, JpaSpecific
     long countByStatus(AlertStatus status);
 
     long countBySeverity(AlertSeverity severity);
+
+    boolean existsByAlertRuleIdAndAssetIdAndStatus(java.util.UUID alertRuleId, java.util.UUID assetId, com.reoagms.monitoring_service.common.enums.AlertStatus status);
 }

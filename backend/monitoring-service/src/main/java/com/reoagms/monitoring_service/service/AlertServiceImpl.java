@@ -103,6 +103,10 @@ public class AlertServiceImpl implements AlertService {
         List<AlertResponse> generated = new ArrayList<>();
         for (AlertRule rule : Stream.concat(assetRules.stream(), globalRules.stream()).toList()) {
             if (ConditionEvaluator.isBreached(rule.getOperator(), reading.getValue(), rule.getThreshold())) {
+                // One open alert per rule and asset: a sustained breach must not flood operators.
+                if (alertRepository.existsByAlertRuleIdAndAssetIdAndStatus(rule.getId(), reading.getAssetId(), AlertStatus.OPEN)) {
+                    continue;
+                }
                 Alert alert = Alert.builder()
                         .facilityId(reading.getFacilityId())
                         .assetId(reading.getAssetId())

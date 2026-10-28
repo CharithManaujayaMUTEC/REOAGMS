@@ -7,7 +7,9 @@ import java.util.Map;
 
 @Data
 @Builder
-public class DashboardSummaryResponse {
+public class DashboardSummaryResponse implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
     private long totalReadingsLast24h;
     private long openAlerts;
     private long acknowledgedAlerts;

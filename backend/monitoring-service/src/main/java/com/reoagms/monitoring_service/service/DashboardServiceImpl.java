@@ -8,6 +8,7 @@ import com.reoagms.monitoring_service.repository.AlertRepository;
 import com.reoagms.monitoring_service.repository.SensorReadingRepository;
 import com.reoagms.monitoring_service.repository.TelemetryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final TelemetryRepository telemetryRepository;
 
     @Override
+    @Cacheable(cacheNames = "dashboardSummary", sync = true)
     public DashboardSummaryResponse getSummary() {
         Map<String, Long> alertsBySeverity = new LinkedHashMap<>();
         for (AlertSeverity severity : AlertSeverity.values()) {
@@ -37,9 +39,9 @@ public class DashboardServiceImpl implements DashboardService {
                 .acknowledgedAlerts(alertRepository.countByStatus(AlertStatus.ACKNOWLEDGED))
                 .resolvedAlerts(alertRepository.countByStatus(AlertStatus.RESOLVED))
                 .alertsBySeverity(alertsBySeverity)
-                .onlineDevices(telemetryRepository.countByStatus(DeviceStatus.ONLINE))
-                .offlineDevices(telemetryRepository.countByStatus(DeviceStatus.OFFLINE))
-                .warningDevices(telemetryRepository.countByStatus(DeviceStatus.WARNING))
+                .onlineDevices(telemetryRepository.countLatestByStatus(DeviceStatus.ONLINE))
+                .offlineDevices(telemetryRepository.countLatestByStatus(DeviceStatus.OFFLINE))
+                .warningDevices(telemetryRepository.countLatestByStatus(DeviceStatus.WARNING))
                 .build();
     }
 }

@@ -15,4 +15,10 @@ public interface TelemetryRepository extends JpaRepository<Telemetry, UUID> {
     Optional<Telemetry> findFirstByAssetIdOrderByLastSeenAtDesc(UUID assetId);
 
     long countByStatus(DeviceStatus status);
+
+    /** Counts assets whose most recent heartbeat has the given status (not every historical row). */
+    @org.springframework.data.jpa.repository.Query("""
+            select count(t) from Telemetry t where t.status = :status
+              and t.lastSeenAt = (select max(t2.lastSeenAt) from Telemetry t2 where t2.assetId = t.assetId)""")
+    long countLatestByStatus(@org.springframework.data.repository.query.Param("status") DeviceStatus status);
 }
