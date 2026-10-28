@@ -300,3 +300,27 @@ PUT    /api/v1/email-templates/{id}
 DELETE /api/v1/email-templates/{id}
 ```
 
+## 10. `.gitignore`
+
+> The `.gitignore` file prevents generated and environment-specific files from being committed to Git. For Java projects, compiled classes, JAR files, Maven target directories, and IDE files are generated automatically, so they do not belong in source control.
+
+Relevant entries:
+
+```gitignore
+target/
+*.class
+*.jar
+/backend/identity-service/bin/
+```
+
+These entries mean:
+
+- `target/` ignores Maven build output.
+- `*.class` ignores compiled Java bytecode.
+- `*.jar` ignores generated Java archives.
+- `/backend/identity-service/bin/` ignores the generated Eclipse or IDE output directory for the identity service.
+- `.env` prevents environment secrets from being committed.
+- `.idea/` and `.vscode/` prevent personal IDE settings from being committed.
+
+> The `bin/` directory is ignored because it contains generated or duplicate build and IDE artifacts. It is not part of the notification-service source code.
+
