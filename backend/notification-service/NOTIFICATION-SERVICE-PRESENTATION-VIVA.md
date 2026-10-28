@@ -205,3 +205,13 @@ Return NotificationResponse
 
 > When the client sends a notification request, the controller receives and validates it. The service converts the request into a notification model and initially assigns the `PENDING` status. The notification is saved in PostgreSQL. Based on the selected channel, the appropriate sender service is called. If delivery succeeds, the status becomes `SENT`; otherwise, it becomes `FAILED`, and the failure reason and retry count can be recorded.
 
+## 5. Email Notifications
+
+> Email notifications use Spring Mail and SMTP. The service supports both direct email sending and template-based email sending. An email template can contain reusable content and placeholders such as `{{recipientName}}` or `{{alertType}}`. Before sending, these placeholders are replaced with actual values.
+
+Relevant classes:
+
+- `EmailController`
+- `EmailSenderService`
+- `EmailTemplateServiceImpl`
+
