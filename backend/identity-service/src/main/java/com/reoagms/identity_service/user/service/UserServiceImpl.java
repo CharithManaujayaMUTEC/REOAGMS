@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.reoagms.identity_service.audit.AuditService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +27,12 @@ public class UserServiceImpl implements UserService {
     private final UserRepository repository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
+
+    private String actor() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth == null ? "system" : auth.getName();
+    }
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
@@ -49,6 +57,7 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         repository.save(user);
+        auditService.record(actor(), "USER_CREATED", "User", user.getEmail() + " as " + role.getName());
 
         return UserMapper.toResponse(user);
 
@@ -83,6 +92,7 @@ public class UserServiceImpl implements UserService {
                         new UserNotFoundException("User not found."));
 
         repository.delete(user);
+        auditService.record(actor(), "USER_DELETED", "User", user.getEmail());
 
     }
 

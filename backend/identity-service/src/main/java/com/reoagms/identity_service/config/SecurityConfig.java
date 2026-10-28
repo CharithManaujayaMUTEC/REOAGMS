@@ -40,11 +40,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
 
                         .requestMatchers("/api/v1/profile/**").authenticated()
 
-                        .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/users/**", "/api/v1/audit-logs/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

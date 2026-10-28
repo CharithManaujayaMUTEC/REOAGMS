@@ -49,7 +49,7 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private boolean accountNonLocked = true;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER) // authorities are read outside a session by the JWT filter
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 

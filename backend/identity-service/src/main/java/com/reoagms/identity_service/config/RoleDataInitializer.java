@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@org.springframework.core.annotation.Order(1)
 public class RoleDataInitializer implements CommandLineRunner {
 
     private final RoleRepository repository;
