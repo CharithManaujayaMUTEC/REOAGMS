@@ -176,3 +176,32 @@ Example response:
 }
 ```
 
+## 4. Notification Flow
+
+```text
+Client
+  |
+  | POST /api/v1/notifications
+  v
+NotificationController
+  |
+  v
+NotificationServiceImpl
+  |
+  | Create Notification entity
+  | Set status to PENDING
+  | Save using repository
+  |
+  | Select delivery channel
+  v
+EmailSenderService / SmsSenderService / PushSenderService
+  |
+  v
+Update status to SENT or FAILED
+  |
+  v
+Return NotificationResponse
+```
+
+> When the client sends a notification request, the controller receives and validates it. The service converts the request into a notification model and initially assigns the `PENDING` status. The notification is saved in PostgreSQL. Based on the selected channel, the appropriate sender service is called. If delivery succeeds, the status becomes `SENT`; otherwise, it becomes `FAILED`, and the failure reason and retry count can be recorded.
+
