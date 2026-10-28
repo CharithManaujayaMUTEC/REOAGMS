@@ -8,3 +8,29 @@ You can start your presentation like this:
 
 The main service is located in `backend/notification-service/`.
 
+## 2. Architecture
+
+```text
+Client
+  |
+  v
+REST Controllers
+  |
+  v
+DTOs
+  |
+  v
+Service Layer
+  |
+  v
+Mappers
+  |
+  v
+Repositories
+  |
+  v
+PostgreSQL Database
+```
+
+> The service follows a layered architecture. Each layer has a specific responsibility. Controllers handle HTTP requests, services contain business logic, repositories communicate with the database, models represent database entities, and DTOs transfer data between the client and the application.
+
