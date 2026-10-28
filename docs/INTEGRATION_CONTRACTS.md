@@ -18,8 +18,12 @@ The consumer validates the schema version and required alert ID. Failed messages
 
 ## API gateway
 
-The gateway routes Identity, Asset, Monitoring, Maintenance, Analytics and Notification paths. API endpoints except `/api/v1/auth/login` and `/api/v1/auth/register` require a valid Bearer JWT at the Gateway. The frontend calls the Gateway only. This starter does not yet implement fine-grained role-based authorization across all domain APIs; add and test role policies before production.
+The gateway routes Identity, Asset, Monitoring, Maintenance, Analytics and Notification paths. Every endpoint except `/api/v1/auth/login` and `/api/v1/auth/register` requires a valid Bearer JWT. The token carries a `role` claim and the gateway's `RolePolicy` restricts write operations per role (read access is open to all authenticated roles; ingestion of readings and telemetry is allowed for any authenticated principal). Identity additionally enforces ADMIN-only access to `/users` and `/audit-logs`. The frontend calls the gateway only; the STOMP endpoint `/ws` is proxied by nginx to the Notification Service.
 
-## Frontend data caveat
+## Maintenance consumer
 
-The overview chart is sample/illustrative, not a claim of live energy-generation time series. Replace it with a documented analytics statistics/time-series contract before presenting it as live telemetry.
+Queue `maintenance.alert-opened.v1` is bound to the same routing key. For `HIGH` and `CRITICAL` alerts the Maintenance Service opens a CORRECTIVE work order, unless the asset already has an active corrective order or the alert id (stored in the description) was already handled.
+
+## Real-time channel
+
+The Notification Service publishes consumed alert events on STOMP topic `/topic/alerts` and in-app notifications on `/topic/notifications` (endpoint `/ws`).

@@ -1,130 +1,97 @@
 # REOAGMS — Renewable Energy Operations, Asset and Grid Management System
 
-REOAGMS is a microservices-based system for renewable-energy asset management, sensor monitoring, alerting, maintenance workflows, notifications and analytics. The repository contains Spring Boot services, PostgreSQL databases per service, an API Gateway, RabbitMQ, Prometheus/Grafana and a React/Vite operations console.
+Event-driven microservices platform for monitoring and maintaining distributed renewable-energy assets (solar, wind, hydro, tidal, battery storage). Spring Boot services behind a Spring Cloud Gateway, RabbitMQ for events, PostgreSQL per service, Redis cache, STOMP/WebSocket live push, Prometheus + Grafana, and a React operations console.
 
-## Architecture and ports
+## Quick start
 
-| Component | Local URL / host port |
-|---|---|
-| React operations console | http://localhost:5173 |
-| API Gateway | http://localhost:8080 |
-| Identity Service | http://localhost:8081 |
-| Asset Service | http://localhost:8082 |
-| Monitoring Service | http://localhost:8083 |
-| Maintenance Service | http://localhost:8084 |
-| Analytics Service | http://localhost:8085 |
-| Notification Service | http://localhost:8086 |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3000 |
-| RabbitMQ management | http://localhost:15672 (development credentials: reoagms / reoagms_password) |
-| PostgreSQL host ports | 5433–5438; each service has a separate database |
-
-Internal service-to-service calls must use Docker DNS names and HTTP APIs. A service must not query another service's database directly. UUIDs are used for cross-service references.
-
-## Requirements
-
-- Docker Desktop with Docker Compose v2 enabled
-- At least 8 GB RAM recommended for the full stack
-- Optional: Java 21 and Node.js 22 if running a service outside Docker
-
-## Run the complete development stack (PowerShell)
-
-From the repository root:
+Requirements: Docker Desktop (Compose v2), ~8 GB RAM.
 
 ```powershell
 Copy-Item .env.example .env -ErrorAction SilentlyContinue
-docker compose config
 docker compose up --build -d
 docker compose ps
 ```
 
-Open http://localhost:5173. The Vite development server proxies `/api` to the API Gateway container. Login uses the Identity Service API. If you choose the demo-dashboard link, only the UI is bypassed; protected backend endpoints remain protected.
+The first start takes a few minutes (Maven builds). Then open **http://localhost:5173**.
+The **simulator** container seeds a demo portfolio (5 facilities, 11 assets, 32 sensors, alert rules, technicians), back-fills 24 h of history and streams live telemetry, injecting a fault roughly once a minute so the alert → work order → notification chain is visible.
 
-Check service health:
+### Demo accounts
+
+All accounts share the password **`Reoagms@2026`** (override with `DEMO_PASSWORD`; disable with `REOAGMS_SEED_DEMO_USERS=false`).
+
+| Role | Email | Can do |
+|---|---|---|
+| System Administrator | `admin@reoagms.com` | Everything, incl. users and audit log |
+| Operations Manager | `manager@reoagms.com` | Manage assets, rules, work orders, reports |
+| Plant Operator | `operator@reoagms.com` | Read everything; acknowledge/resolve alerts |
+| Maintenance Engineer | `engineer@reoagms.com` | Read everything; assign/start/complete work orders |
+| Executive Management | `executive@reoagms.com` | Read-only dashboards, KPIs and reports |
+
+Self-registration from the login page always creates a *Plant Operator*; only an administrator can grant other roles.
+
+### URLs
+
+| Component | URL |
+|---|---|
+| Operations console | http://localhost:5173 |
+| API Gateway | http://localhost:8080 |
+| Services | Identity 8081 · Asset 8082 · Monitoring 8083 · Maintenance 8084 · Analytics 8085 · Notification 8086 |
+| Grafana (login `admin` / `reoagms`; port via `GRAFANA_PORT`) | http://localhost:3000 — dashboard *REOAGMS Platform Health* |
+| Prometheus | http://localhost:9090 |
+| RabbitMQ management (`reoagms` / `reoagms_password`) | http://localhost:15672 |
+
+Presentation pack (slides, 5-minute demo script and team guide as PDFs) is in `deliverables/`. Seed only: `.\scripts\seed-database.ps1`.
+
+## How the report maps to the code
+
+| Report requirement | Implementation |
+|---|---|
+| FR-01/02/03 authentication, RBAC, user management | Identity Service (JWT with `role` claim); gateway `RolePolicy` enforces write permissions per role; Administration page |
+| FR-04/05/06 facilities, assets, sensors | Asset Service + *Assets* page |
+| FR-07/08 telemetry ingest and history | Monitoring Service `/sensor-readings`, `/telemetry`; simulator is the data source |
+| FR-09/10 threshold evaluation and alerts | `AlertServiceImpl.evaluateReading` (one open alert per rule+asset) |
+| FR-11 auto work orders for critical alerts | Maintenance Service consumes `monitoring.alert.opened.v1` from RabbitMQ and opens a corrective order for HIGH/CRITICAL alerts |
+| FR-12 work-order lifecycle | Kanban board: assign → start → complete |
+| FR-13/14 live dashboard, WebSocket + STOMP | Notification Service broadcasts alerts on `/topic/alerts`; console subscribes via `/ws` |
+| FR-15 RabbitMQ events | Topic exchange `reoagms.events`; consumers in Notification and Maintenance |
+| FR-16 audit logs | Identity Service `audit_logs` (logins, failed logins, user create/delete); Administration → Audit log |
+| FR-17 reports | Analytics Service energy/performance reports with CSV export |
+| FR-18 REST through the gateway | All routes under `/api/v1/**` on port 8080 |
+| Redis caching (§5.6) | Monitoring dashboard summary cached 10 s; degrades to the database if Redis is down |
+| Prometheus / Grafana (§5.9) | All services expose `/actuator/prometheus`; Grafana ships a provisioned dashboard |
+
+## Architecture
+
+```
+React console ──► Spring Cloud Gateway ──► Identity | Asset | Monitoring | Maintenance | Analytics | Notification
+      ▲   (nginx /api, /ws)  (JWT + RBAC)        │         │         │            │             │
+      └──── STOMP /ws ◄──────────────────────────┼─────────┼──── RabbitMQ (reoagms.events) ────┘
+                                                 └─ PostgreSQL per service      Redis (cache)
+Prometheus ──► Grafana
+```
+
+Services never read each other's databases; cross-service references are UUIDs and calls go over HTTP or RabbitMQ.
+
+## Development
 
 ```powershell
-$ports = 8080,8081,8082,8083,8084,8085,8086
-foreach ($port in $ports) {
-  try { $r = Invoke-RestMethod "http://localhost:$port/actuator/health"; Write-Host "$port : $($r.status)" }
-  catch { Write-Host "$port : FAILED - $($_.Exception.Message)" }
-}
+# Backend tests (Java 21), per service
+cd backend/monitoring-service; .\mvnw.cmd test
+
+# Frontend outside Docker (proxies /api to the gateway and /ws to the notification service)
+cd frontend; npm ci; npm run dev
 ```
 
-View logs:
+Useful commands:
 
 ```powershell
-docker compose logs -f api-gateway identity-service asset-service monitoring-service maintenance-service analytics-service notification-service frontend
+docker compose logs -f simulator maintenance-service notification-service
+.\scripts\check-local.ps1            # health of every service
+docker compose down -v               # stop and DELETE all local data
 ```
 
-Stop the stack:
+Simulator tuning (`.env`): `SIM_INTERVAL_MS`, `SIM_SOLAR_MODE=real` (follows the sun; solar is 0 at night).
 
-```powershell
-docker compose down
-```
+## Production notes
 
-To reset all local database data (DESTRUCTIVE):
-
-```powershell
-docker compose down -v
-docker compose up --build -d
-```
-
-## Frontend development outside Docker
-
-```powershell
-cd frontend
-Copy-Item .env.example .env
-npm install
-npm run dev
-```
-
-Set `VITE_GATEWAY_PROXY=http://localhost:8080` in `frontend/.env` for this mode.
-
-## Backend tests
-
-Run from each service directory (Java 21 required):
-
-```powershell
-cd backend/monitoring-service
-.\mvnw.cmd test
-```
-
-Repeat for `identity-service`, `asset-service`, `maintenance-service`, `analytics-service`, `notification-service`, and `api-gateway`. A successful image build is not a substitute for running service and end-to-end tests.
-
-## RabbitMQ alert flow
-
-Monitoring publishes schema-versioned `monitoring.alert.opened.v1` events to the durable `reoagms.events` topic exchange when alerts are created or generated from breached sensor readings. Notification consumes from `notification.alert-opened.v1` and creates a notification record. Configure `MAIL_USERNAME`, `MAIL_PASSWORD`, and `ALERT_NOTIFICATION_RECIPIENT` in the root `.env` to enable actual email delivery. Without valid SMTP credentials, event consumption may still create a failed notification record; that is expected in an unconfigured development environment.
-
-## Environment variables and secrets
-
-See `.env.example`. The Compose passwords and fallback JWT key are development-only. Do not deploy these defaults to a shared or production environment. Use unique strong credentials/secrets, restrictive database exposure, TLS, and production-grade secret storage. `.env` is ignored by Git.
-
-## Important integration notes
-
-- Service-specific DTOs define the accepted request payload. The frontend's generic create form is a developer utility, not a substitute for schema-driven forms.
-- Some dashboard chart data is explicitly illustrative until the Monitoring/Analytics APIs expose the agreed time-series contract. KPI cards use summary values where available and fall back to counts from fetched lists.
-- API paths are routed through the Gateway, but each service's exact CRUD operations and authorization rules must be verified against its controller and tests.
-- Production readiness still requires review of JWT validation, authorization policies, SMTP/SMS credentials, migrations, retry/dead-letter behaviour, backups, rate limiting, and Kubernetes manifests.
-
-## Project structure
-
-```text
-backend/
-  api-gateway/
-  identity-service/
-  asset-service/
-  monitoring-service/
-  maintenance-service/
-  analytics-service/
-  notification-service/
-frontend/
-infrastructure/prometheus/
-infrastructure/grafana/
-k8s/base/
-docs/api/
-docs/database/
-```
-
-## Kubernetes starter
-
-A single-replica Kubernetes starter is provided under `k8s/base` for the services, separate PostgreSQL databases, RabbitMQ and frontend. Read `k8s/base/README.md` first: build/publish the referenced images and replace development secrets before applying. It is not a production cluster configuration.
+Compose passwords, the JWT secret and the demo accounts are **development defaults** — replace them, disable seeding, terminate TLS in front of nginx, and use production secret storage. SMTP credentials (`MAIL_USERNAME`, `MAIL_PASSWORD`) are required for email delivery; without them notification records are created with status `FAILED`. Kubernetes starter manifests live in `k8s/base` (see its README).
