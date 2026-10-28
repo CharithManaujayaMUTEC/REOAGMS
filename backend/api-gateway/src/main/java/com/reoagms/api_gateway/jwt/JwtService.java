@@ -6,4 +6,6 @@ public interface JwtService {
 
     String extractUsername(String token);
 
+    String extractRole(String token);
+
 }

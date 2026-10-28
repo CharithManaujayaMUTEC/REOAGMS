@@ -1,7 +1,8 @@
 package com.reoagms.api_gateway.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.reoagms.api_gateway.jwt.JwtService;
+import com.reoagms.api_gateway.util.RolePolicy;
 import com.reoagms.api_gateway.util.RouteValidator;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class AuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final RouteValidator validator;
+    private final RolePolicy rolePolicy;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -40,6 +42,15 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             objectMapper.writeValue(response.getOutputStream(), Map.of(
                     "status", 401, "error", "Unauthorized",
                     "message", "A valid Bearer token is required to access this API."));
+            return;
+        }
+        String role = jwtService.extractRole(header.substring(7));
+        if (!rolePolicy.isAllowed(request.getMethod(), request.getRequestURI(), role)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            objectMapper.writeValue(response.getOutputStream(), Map.of(
+                    "status", 403, "error", "Forbidden",
+                    "message", "Your role (" + role + ") is not permitted to perform this action."));
             return;
         }
         chain.doFilter(request, response);
