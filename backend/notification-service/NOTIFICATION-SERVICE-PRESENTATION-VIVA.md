@@ -324,3 +324,49 @@ These entries mean:
 
 > The `bin/` directory is ignored because it contains generated or duplicate build and IDE artifacts. It is not part of the notification-service source code.
 
+## 11. Common Viva Questions and Answers
+
+### Why did you use a layered architecture?
+
+> Layered architecture separates responsibilities. It improves maintainability, testing, readability, and allows one layer to change without heavily affecting the others.
+
+### Why use DTOs instead of returning entities?
+
+> DTOs prevent direct exposure of database models, provide controlled API responses, and allow request validation.
+
+### Why use repositories?
+
+> Repositories abstract database operations and reduce the need to write repetitive SQL code.
+
+### Why do you need notification status?
+
+> Status allows us to track the delivery lifecycle of a notification. It tells us whether the notification is pending, successfully sent, or failed.
+
+### Why is the initial status `PENDING`?
+
+> A notification may be saved before or while delivery is attempted. `PENDING` represents that delivery has not yet completed.
+
+### What happens if email delivery fails?
+
+> The notification is marked as failed, the failure reason is recorded, and the retry mechanism can attempt delivery again according to the retry configuration.
+
+### Why separate SMS notifications from general notifications?
+
+> SMS notifications have SMS-specific data, such as phone number and SMS delivery information. Separating them allows the SMS workflow to evolve independently.
+
+### Is the SMS provider fully implemented?
+
+> The SMS request and persistence flow is implemented, but the external provider integration is currently structured as a provider-ready component. A provider such as Twilio or AWS SNS can be connected later.
+
+### Why use enums?
+
+> Enums prevent invalid values and make the allowed channels and statuses explicit and type-safe.
+
+### What is the role of `GlobalExceptionHandler`?
+
+> It centralizes exception handling and returns consistent HTTP error responses across the API.
+
+### What is the purpose of `NotificationRetryScheduler`?
+
+> It periodically checks failed notifications and retries delivery until the configured maximum attempt count is reached.
+
