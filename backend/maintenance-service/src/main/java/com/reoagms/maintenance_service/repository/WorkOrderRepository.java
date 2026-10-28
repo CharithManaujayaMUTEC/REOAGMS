@@ -12,6 +12,10 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
 
     List<WorkOrder> findByAssetId(UUID assetId);
 
+    boolean existsByDescriptionContaining(String fragment);
+
+    boolean existsByAssetIdAndMaintenanceTypeAndStatusIn(UUID assetId, com.reoagms.maintenance_service.common.enums.MaintenanceType type, java.util.Collection<WorkOrderStatus> statuses);
+
     List<WorkOrder> findByTechnicianId(UUID technicianId);
 
     List<WorkOrder> findByStatus(WorkOrderStatus status);
