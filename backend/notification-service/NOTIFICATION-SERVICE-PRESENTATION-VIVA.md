@@ -370,3 +370,6 @@ These entries mean:
 
 > It periodically checks failed notifications and retries delivery until the configured maximum attempt count is reached.
 
+## 12. Short Viva Summary
+
+> My notification service is a Spring Boot microservice that manages email, SMS, and push notifications. It follows a layered architecture consisting of controllers, DTOs, services, repositories, models, mappers, enums, and exception handling. Controllers expose REST endpoints, services implement business logic, repositories provide PostgreSQL access, and models represent persisted data. Notifications have channels and statuses, such as EMAIL, SMS, PUSH, PENDING, SENT, and FAILED. The service also supports reusable email templates, SMTP email delivery, SMS request handling, failure tracking, and scheduled retries. Generated files such as Maven target files, compiled classes, JAR files, and IDE artifacts are excluded using `.gitignore`.
