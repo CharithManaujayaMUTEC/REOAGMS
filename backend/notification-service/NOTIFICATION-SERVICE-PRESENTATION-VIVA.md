@@ -215,3 +215,17 @@ Relevant classes:
 - `EmailSenderService`
 - `EmailTemplateServiceImpl`
 
+## 6. SMS Notifications
+
+> SMS requests contain a phone number and a message. The SMS notification is stored separately so that SMS-specific information can be tracked. The current sender class provides the integration point for connecting an external SMS provider such as Twilio or AWS SNS.
+
+Relevant classes:
+
+- `SmsController`
+- `SMSNotificationServiceImpl`
+- `SmsSenderService`
+
+Be accurate in the viva:
+
+> The SMS provider integration is currently a structured placeholder. The application supports SMS request handling and persistence, while a real provider can be connected through `SmsSenderService`.
+
