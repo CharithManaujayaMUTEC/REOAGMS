@@ -1,4 +1,5 @@
-// Builds one 7-slide academic deck per team member into docs/presentations.
+// Builds the single 10-slide team deck (deliverables/REOAGMS-Team-Presentation.pptx)
+// and src/live.md, the word-for-word script, from the same data so they never drift.
 // Run: node scripts/presentations/build-decks.js   (needs pptxgenjs)
 const path = require('path');
 const fs = require('fs');
@@ -7,201 +8,85 @@ const pptxgen = require('pptxgenjs');
 const OUT = path.join(__dirname, '..', '..', 'deliverables');
 fs.mkdirSync(OUT, { recursive: true });
 
-const NAVY = '1B2A49', STEEL = '3D5A80', INK = '22304A', MUTED = '5B6B82', LINE = 'C9D3E0', TINT = 'EEF2F8', WHITE = 'FFFFFF', ACCENT = 'B5651D';
-const HEAD = 'Cambria', BODY = 'Calibri';
-const COURSE = 'EC8208 Software Architecture · University of Ruhuna · REOAGMS';
+const BG = '0A1020', PANEL = '121B33', EDGE = '24314F', TEXT = 'F1F5FB', MUTED = '8C9BB8', CYAN = '22D3EE', LIME = 'A3E635';
+const FONT = 'Segoe UI', FONT_B = 'Segoe UI Semibold';
+const COURSE = 'EC8208 Software Architecture  ·  University of Ruhuna';
 
-const MEMBERS = [
+// Each service slide: flow (3-4 steps), stats (3), live cue, spoken words.
+const SLIDES = [
   {
-    file: '1-Charith', name: 'Charith', id: 'EG/2021/4707',
-    title: 'System Architecture, Identity, Gateway & Integration',
-    scope: ['Hybrid architecture decision: layered, client–server, microservices, event-driven', 'Identity Service: JWT authentication, RBAC, audit log', 'API Gateway: routing, token validation, role policy', 'React console, Docker Compose, Kubernetes manifests, RabbitMQ infrastructure', 'Final integration and end-to-end testing'],
-    fr: ['FR-01', 'FR-02', 'FR-03', 'FR-16', 'FR-18'],
-    flowTitle: 'Request path through the platform',
-    flow: [['React console', 'nginx · STOMP /ws'], ['API Gateway', 'JWT + role policy'], ['Identity Service', 'users · roles · audit'], ['identity_db', 'PostgreSQL']],
-    table: [['JWT', 'HS256 token with subject and role claim, 24 h expiry'], ['Passwords', 'BCrypt hashes; self-registration is always Plant Operator'], ['Gateway', '7 routes under /api/v1; 401 without token, 403 by role'], ['Audit log', 'Login success and failure, user create and delete'], ['Deployment', 'Docker Compose and k8s/base manifests']],
-    interfaces: ['POST /api/v1/auth/login and /register', 'GET /api/v1/users, /audit-logs (ADMIN only)', '/ws proxied to the Notification Service'],
-    infra: ['RabbitMQ topic exchange reoagms.events with dead-letter queue', 'Redis cache, Prometheus and Grafana', 'nginx serves the production React build'],
-    stats: [['19', 'containers in Docker Compose'], ['5', 'RBAC roles with seeded accounts'], ['7', 'gateway routes']],
-    evidence: 'Role matrix verified: Manager can create a facility (200); Operator, Engineer and Executive receive 403.',
-    demo: ['Sign in as Administrator', 'Control room: live KPIs and alert feed', 'Administration: users and audit log'],
-    take: ['One entry point, one security policy', 'Services stay independent; events decouple them', 'Everything starts with one command'],
+    kind: 'title', time: '0:00–0:10', who: 'Charith', screen: 'Title slide',
+    say: 'Good morning. We are presenting REOAGMS, a platform that monitors and maintains renewable energy assets in real time.',
   },
   {
-    file: '2-Nemal', name: 'Nemal', id: 'EG/2021/4710',
-    title: 'Asset Service: Facilities, Assets & Sensors',
-    scope: ['Facility, asset and sensor CRUD', 'Image upload for assets', 'Search, filtering, pagination and sorting', 'Bean Validation and structured error responses', 'Unit tests for services and image handling'],
-    fr: ['FR-04', 'FR-05', 'FR-06'],
-    flowTitle: 'Layered structure of the service',
-    flow: [['Controller', 'REST + validation'], ['Service', 'business rules'], ['Repository', 'Spring Data JPA'], ['asset_db', 'PostgreSQL']],
-    table: [['Facility', '5 types (solar, wind, hydro, battery, tidal); MW capacity and coordinates'], ['Asset', '7 types, 5 statuses, rated capacity in kW, serial number'], ['Sensor', '9 metric types, unit, min and max thresholds'], ['Images', 'Multipart upload stored per asset'], ['Search', 'JPA Specifications by name, status and type; paged, default 20']],
-    interfaces: ['/api/v1/facilities, /assets, /sensors', '/api/v1/assets/search with page, size, sort', 'UUID identifiers shared with other services'],
-    infra: ['Monitoring uses sensor and asset ids', 'Maintenance orders reference an asset', 'Analytics reads rated capacity for expected energy'],
-    stats: [['5 / 11 / 32', 'facilities / assets / sensors in the database'], ['19', 'unit test methods'], ['9', 'sensor metric types']],
-    evidence: 'Validation rejects blank names, future installation dates and non-positive capacity with field-level messages.',
-    demo: ['Assets page: facilities, assets, sensors', 'Search and tab filtering', 'Add a facility; see validation'],
-    take: ['Registry is the source of truth for ids', 'Pagination keeps lists fast', 'Write access is restricted by role'],
+    kind: 'arch', time: '0:10–0:45', who: 'Charith', screen: 'Console: sign in as admin, then the Control room',
+    say: 'REOAGMS is six Spring Boot microservices behind one API gateway, connected by RabbitMQ events, each with its own PostgreSQL database. I sign in as the administrator; the gateway validates my token and role. This is the control room: live generation, open alerts, device health and an hourly energy curve. Nemal will show where this data comes from.',
   },
   {
-    file: '3-Govindu', name: 'Govindu', id: 'EG/2021/4701',
-    title: 'Monitoring Service: Telemetry & Alerting',
-    scope: ['Sensor readings and device telemetry ingestion', 'Configurable alert rules and alert generation', 'Historical data retrieval with filters', 'Dashboard summary APIs', 'RabbitMQ alert publisher'],
-    fr: ['FR-07', 'FR-08', 'FR-09', 'FR-10', 'FR-13', 'FR-15'],
-    flowTitle: 'From reading to alert event',
-    flow: [['Reading API', 'POST /sensor-readings'], ['Rule evaluator', 'operator vs threshold'], ['Alert', 'OPEN → ACK → RESOLVED'], ['RabbitMQ', 'alert.opened.v1']],
-    table: [['Rules', '5 operators, 4 severities, per asset or global'], ['De-duplication', 'One OPEN alert per rule and asset'], ['Event', 'monitoring.alert.opened.v1 on reoagms.events'], ['History', 'Filter by facility, asset, sensor, metric, time window'], ['Dashboard', 'Counts by status, severity and device state; Redis cache 10 s']],
-    interfaces: ['/api/v1/sensor-readings, /telemetry', '/api/v1/alerts, /alert-rules', '/api/v1/dashboard/summary'],
-    infra: ['Publishes AlertEvent v1 (schemaVersion, alertId, assetId, severity, value, threshold)', 'Consumed by Notification and Maintenance', 'Cache falls back to PostgreSQL if Redis is down'],
-    stats: [['16,000+', 'readings stored in monitoring_db'], ['7', 'seeded detection rules'], ['11', 'unit test methods']],
-    evidence: 'Device health uses the latest heartbeat of every asset, and dashboard answers are cached for 10 s in Redis.',
-    demo: ['Live monitoring: sensor tiles and threshold line', 'A fault is injected by the simulator', 'Alert appears instantly via STOMP'],
-    take: ['Rules are data, not code', 'Events are versioned contracts', 'Dedup protects operators from alert floods'],
+    kind: 'svc', n: '03', who: 'Nemal', name: 'Asset Service', time: '0:45–1:15', screen: 'Assets page: switch tabs, open Add, then cancel',
+    head: 'The registry every service relies on',
+    flow: [['Facility', '5 types'], ['Asset', '7 types'], ['Sensor', '9 metrics']],
+    stats: [['5 · 11 · 32', 'facilities · assets · sensors'], ['Server-side', 'search and paging'], ['Validated', 'every form']],
+    say: 'Thank you, Charith. The Asset Service owns the registry: five facilities, eleven assets and thirty-two sensors across solar, wind, hydro, battery and tidal. Lists are searched and paged on the server, and every form is validated, so a blank name is rejected. Only administrators and managers can change data. Every other service refers to these assets by ID. Govindu will show them producing live data.',
   },
   {
-    file: '4-Thurunu', name: 'Thurunu', id: 'EG/2021/4620',
-    title: 'Maintenance Service: Work Orders & Field Crew',
-    scope: ['Work orders and maintenance tasks', 'Technician assignment and availability', 'Preventive and corrective maintenance', 'Maintenance history and summary reports', 'Automatic corrective orders from alerts'],
-    fr: ['FR-11', 'FR-12'],
-    flowTitle: 'Work-order lifecycle',
-    flow: [['Alert event', 'HIGH or CRITICAL'], ['Work order', 'status CREATED'], ['Assigned → In progress', 'technician + start'], ['Completed', 'history record']],
-    table: [['Work order', 'CREATED → ASSIGNED → IN_PROGRESS → COMPLETED or CANCELLED'], ['Task', 'PENDING, IN_PROGRESS, COMPLETED with start and complete'], ['Technician', 'Specialisation and availability (available, busy, off duty)'], ['Types', 'PREVENTIVE and CORRECTIVE'], ['History and reports', 'Per-asset history; /maintenance-reports/summary']],
-    interfaces: ['/api/v1/work-orders (assign, start, complete)', '/api/v1/maintenance-tasks, /technicians', '/api/v1/maintenance-history'],
-    infra: ['Consumes queue maintenance.alert-opened.v1', 'Skips an asset that already has an active corrective order', 'Idempotent: alert id is stored in the description'],
-    stats: [['14', 'work orders in the database'], ['4', 'technicians'], ['3', 'completed jobs in history']],
-    evidence: 'Auto-creation verified end to end: a CRITICAL temperature alert produced a CORRECTIVE order within seconds.',
-    demo: ['Maintenance board: auto-created order', 'Assign a technician', 'Start, then complete'],
-    take: ['Faults become actionable work automatically', 'One active corrective order per asset', 'History keeps a full record of maintenance'],
+    kind: 'svc', n: '04', who: 'Govindu', name: 'Monitoring Service', time: '1:15–2:00', screen: 'Live monitoring page, then the toast and the Alerts page',
+    head: 'From a sensor reading to an instant alert',
+    flow: [['Reading', 'every few seconds'], ['Rule check', 'threshold'], ['Alert', 'one per asset'], ['RabbitMQ', 'event']],
+    stats: [['16,000+', 'readings stored'], ['7', 'alert rules'], ['10 s', 'Redis cached dashboard']],
+    say: 'Thanks, Nemal. The Monitoring Service receives a reading from every sensor and checks it against our alert rules. This tile is a live sensor and the dashed line is its threshold. The simulator has just injected a fault, and here is the alert, instantly. One alert is stored, one event goes to RabbitMQ, and the browser is updated over WebSocket. That same event is now reaching Thurunu.',
   },
   {
-    file: '5-Yasiru', name: 'Yasiru', id: 'EG/2021/4770',
-    title: 'Notification Service: Alerts, Email & Real-time Push',
-    scope: ['Email and SMS notification channels', 'Email templates', 'Notification history', 'Retry handling for failed deliveries', 'RabbitMQ alert consumer'],
-    fr: ['FR-14', 'FR-15'],
-    flowTitle: 'Alert delivery pipeline',
-    flow: [['RabbitMQ queue', 'alert-opened queue'], ['Alert consumer', 'schema check'], ['Dispatchers', 'EMAIL · SMS · PUSH'], ['notification_db', 'history']],
-    table: [['Consumer', 'Durable queue with dead-letter queue after retries'], ['Channels', 'EMAIL via SMTP, SMS dispatcher, in-app PUSH over STOMP'], ['Templates', 'CRUD for subject and body templates'], ['History', 'Status, retry count and failure reason per message'], ['Retry', 'Scheduler: up to 3 attempts, 60 s apart; manual retry']],
-    interfaces: ['/api/v1/notifications (list, retry)', '/api/v1/email, /email-templates, /sms', 'WebSocket endpoint /ws'],
-    infra: ['Input: AlertEvent v1 from Monitoring', 'Output: /topic/alerts and /topic/notifications', 'SMTP through MAIL_USERNAME and MAIL_PASSWORD'],
-    stats: [['76+', 'notifications recorded'], ['3', 'automatic retries per message'], ['14', 'unit test methods']],
-    evidence: 'Every attempt is stored with status, retry count and failure reason; in-app push reaches the console instantly over STOMP.',
-    demo: ['Notifications page: PUSH delivered', 'Delivery history and retry control', 'Toast arrives over WebSocket'],
-    take: ['Every delivery is recorded', 'In-app push works without SMTP', 'Consumers are decoupled from Monitoring'],
+    kind: 'svc', n: '05', who: 'Thurunu', name: 'Maintenance Service', time: '2:00–2:35', screen: 'Maintenance board: newest card, Assign, Start, Complete',
+    head: 'Faults become tracked work automatically',
+    flow: [['Alert event', 'high or critical'], ['Work order', 'created'], ['Technician', 'assigned'], ['Completed', 'in history']],
+    stats: [['0 clicks', 'to open a corrective order'], ['4', 'technicians'], ['1', 'active order per asset']],
+    say: 'Yes. The Maintenance Service received the same event and, because the severity is high, it opened a corrective work order by itself. Here it is on the board. I assign a technician, start the work and complete it. Each step is its own endpoint, and the finished job is saved to the maintenance history. Yasiru will show how people are informed.',
   },
   {
-    file: '6-Sachinthana', name: 'Sachinthana', id: 'EG/2021/4828',
-    title: 'Analytics Service: KPIs, Reports & Export',
-    scope: ['Dashboard summaries and statistics', 'Energy and performance reports', 'Maintenance statistics and asset utilisation', 'KPIs with targets', 'Report export'],
-    fr: ['FR-17'],
-    flowTitle: 'How a report is produced',
-    flow: [['Source APIs', '3 services via REST'], ['Calculation', 'energy + performance'], ['Reports and KPIs', 'analytics_db'], ['CSV export', '/{id}/export']],
-    table: [['Energy', 'Average power per sensor per hour × hours = kWh; variance vs expected'], ['Performance', 'Availability, efficiency, capacity factor, utilisation, downtime'], ['Maintenance', 'Open orders, completion rate, alert count'], ['KPIs', '11 KPI types with target, actual and status'], ['Export', 'CSV download for energy and performance reports']],
-    interfaces: ['/api/v1/analytics/dashboard, /statistics', '/api/v1/energy-reports, /performance-reports', '/api/v1/kpis, /dashboards'],
-    infra: ['REST clients only; no shared databases', 'Aggregation restricted to POWER readings', 'Console charts use the hourly trend'],
-    stats: [['5 + 5', 'energy and performance reports'], ['6', 'KPIs seeded'], ['11', 'unit test methods']],
-    evidence: 'Energy is integrated from average power per hour, so every figure is true kWh, and each report exports to CSV.',
-    demo: ['Analytics page: facility and range', 'Generate an energy report', 'Export CSV'],
-    take: ['Reports are computed, stored and exportable', 'Correct units make the figures trustworthy', 'Executives get read-only access'],
+    kind: 'svc', n: '06', who: 'Yasiru', name: 'Notification Service', time: '2:35–3:05', screen: 'Notifications page',
+    head: 'Every alert delivered and recorded',
+    flow: [['Queue', 'durable'], ['Consumer', 'schema check'], ['Channels', 'email · push'], ['History', 'stored']],
+    stats: [['Instant', 'in-app push'], ['3', 'automatic retries'], ['100%', 'deliveries recorded']],
+    say: 'The Notification Service read the same alert from its own RabbitMQ queue. In this history, the in-app push was delivered instantly, and every email attempt is stored with its status, retry count and reason. A scheduler retries up to three times, I can retry any message here, and failing messages go to a dead-letter queue, so nothing is lost. Sachinthana will turn all this into reports.',
   },
   {
-    file: '7-All-Members', name: 'All Members', id: 'Team',
-    title: 'Quality, Documentation & Integration',
-    scope: ['Unit and integration tests', 'API documentation', 'Validation and error handling', 'Coordination so services integrate cleanly', 'Shared integration contracts'],
-    fr: ['All FR', 'NFR'],
-    flowTitle: 'Quality pipeline',
-    flow: [['Contracts', 'docs/ contracts'], ['Service tests', 'JUnit + Mockito'], ['Gateway checks', 'auth + role matrix'], ['End-to-end', 'reading → alert → order']],
-    table: [['Tests', '60 test methods across 7 modules'], ['Documentation', 'OpenAPI + Postman (Monitoring, Analytics), SQL schemas, ER diagrams'], ['Validation', 'Bean Validation; messages returned as validationErrors'], ['Errors', 'GlobalExceptionHandler per service, consistent JSON'], ['Compatibility', 'UUID references, versioned events, single gateway']],
-    interfaces: ['docs/INTEGRATION_CONTRACTS.md (alert event v1)', 'docs/api: OpenAPI and Postman collections', 'docs/database and docs/diagrams'],
-    infra: ['Verified chain: reading → alert → RabbitMQ', 'then work order, notification and STOMP push', 'Prometheus scrapes all 7 services'],
-    stats: [['60', 'test methods'], ['7', 'services behind the gateway'], ['1', 'versioned event contract']],
-    evidence: 'Shared contracts, validation and 60 test methods keep seven independent services compatible.',
-    demo: ['RBAC: executive is read-only', 'Grafana platform dashboard', 'RabbitMQ and Prometheus targets'],
-    take: ['Contracts first, then code', 'Tests protect each service boundary', 'Every service deploys independently'],
+    kind: 'svc', n: '07', who: 'Sachinthana', name: 'Analytics Service', time: '3:05–3:45', screen: 'Analytics page: pick a facility, Generate, then export CSV',
+    head: 'Trustworthy energy figures and reports',
+    flow: [['Source APIs', 'REST only'], ['Calculation', 'power to kWh'], ['Reports', 'stored'], ['CSV', 'export']],
+    stats: [['kWh', 'integrated from power'], ['6', 'KPIs with targets'], ['5 + 5', 'energy and performance reports']],
+    say: 'The Analytics Service calls the other services over REST and never touches their databases. For this facility it integrates average power into kilowatt-hours for each hour, and calculates availability, efficiency and capacity factor. I generate an energy report for the last day and export it as CSV for management. Executives see all of this read-only. Charith will close with security.',
+  },
+  {
+    kind: 'rbac', time: '3:45–4:15', who: 'Charith', screen: 'Sign out, sign in as executive@reoagms.com, show the read-only pages',
+    say: 'Security is enforced at the gateway. Five roles carry different rights. I sign in as the executive: there are no action buttons, and the API itself answers 403 for any write. Every login and user change is recorded in the audit log. Quality is built in as well, with sixty test methods across the services.',
+  },
+  {
+    kind: 'ops', time: '4:15–4:50', who: 'All members', screen: 'Grafana tab, then back to the slide',
+    say: 'CHARITH: Operations are visible in Grafana, where Prometheus scrapes all seven services. NEMAL: Validation and tests protect every API. GOVINDU: Rules are data, so thresholds change without code. THURUNU: Every fault ends as recorded maintenance. YASIRU: Every notification is stored and can be retried. SACHINTHANA: Reports turn operations into decisions.',
+  },
+  {
+    kind: 'end', time: '4:50–5:00', who: 'All members', screen: 'Thank you slide',
+    say: 'ALL: Thank you. We are happy to take your questions.',
   },
 ];
 
-const NARR = require('./narration');
-MEMBERS.forEach((m) => Object.assign(m, NARR[m.name]));
+const ARCH_SERVICES = ['Identity', 'Asset', 'Monitoring', 'Maintenance', 'Notification', 'Analytics'];
+const ROLES = [['Administrator', 'Everything, users and audit log'], ['Operations Manager', 'Assets, rules, work orders, reports'], ['Plant Operator', 'Monitor and handle alerts'], ['Maintenance Engineer', 'Assign and complete work orders'], ['Executive', 'Read-only dashboards and reports']];
+const OPS = [['60', 'test methods'], ['7', 'services monitored'], ['19', 'containers'], ['1', 'command to start']];
 
-function addMember(pres, m) {
-  pres.addSection({ title: m.name });
-  const heading = (s, text, kicker) => {
-    s.addText(kicker, { x: 0.5, y: 0.3, w: 9, h: 0.25, fontFace: BODY, fontSize: 12, bold: true, color: ACCENT, charSpacing: 3, margin: 0, isTextBox: true });
-    s.addText(text, { x: 0.5, y: 0.55, w: 9, h: 0.6, fontFace: HEAD, fontSize: 30, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  };
-
-  // 1 Title
-  let s = pres.addSlide({ sectionTitle: m.name });
-  s.background = { color: WHITE };
-  s.addText('RENEWABLE ENERGY OPERATIONS, ASSET AND GRID MANAGEMENT SYSTEM', { x: 0.7, y: 0.8, w: 8.6, h: 0.3, fontFace: BODY, fontSize: 12, bold: true, color: ACCENT, charSpacing: 3, margin: 0, isTextBox: true });
-  s.addText(m.title, { x: 0.7, y: 1.35, w: 8.6, h: 1.6, fontFace: HEAD, fontSize: 38, bold: true, color: NAVY, margin: 0, valign: 'top', isTextBox: true });
-  s.addText(m.name, { x: 0.7, y: 3.45, w: 8.6, h: 0.5, fontFace: BODY, fontSize: 24, bold: true, color: INK, margin: 0, isTextBox: true });
-  s.addText('EC8208 Software Architecture · Continuous Assessment 01\nDepartment of Electrical and Information Engineering, University of Ruhuna', { x: 0.7, y: 4.3, w: 8.6, h: 0.6, fontFace: BODY, fontSize: 14, color: MUTED, margin: 0, isTextBox: true });
-  s.addNotes(m.notes[0]);
-
-  // 2 Role and scope
-  s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: m.name });
-  heading(s, 'Role and scope', 'RESPONSIBILITIES');
-  s.addText(m.scope.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < m.scope.length - 1, paraSpaceAfter: 6 } })), { x: 0.5, y: 1.45, w: 5.7, h: 3.5, fontFace: BODY, fontSize: 16, color: INK, valign: 'top', margin: 0, isTextBox: true });
-  s.addShape(pres.ShapeType.roundRect, { x: 6.5, y: 1.45, w: 3.0, h: 0.75 + 0.42 * m.fr.length, fill: { color: TINT }, line: { color: LINE, width: 0.75 }, rectRadius: 0.08 });
-  s.addText('Requirements covered', { x: 6.7, y: 1.6, w: 2.6, h: 0.3, fontFace: BODY, fontSize: 14, bold: true, color: STEEL, margin: 0, isTextBox: true });
-  s.addText(m.fr.map((t, i) => ({ text: t, options: { breakLine: i < m.fr.length - 1, paraSpaceAfter: 4 } })), { x: 6.7, y: 2.0, w: 2.6, h: 0.42 * m.fr.length, fontFace: BODY, fontSize: 16, color: NAVY, bold: true, valign: 'top', margin: 0, isTextBox: true });
-  s.addNotes(m.notes[1]);
-
-  // 3 Design flow
-  s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: m.name });
-  heading(s, m.flowTitle, 'DESIGN');
-  const n = m.flow.length, gap = 0.4, bw = (9 - gap * (n - 1)) / n;
-  m.flow.forEach(([t, sub], i) => {
-    const x = 0.5 + i * (bw + gap);
-    s.addShape(pres.ShapeType.roundRect, { x, y: 1.9, w: bw, h: 1.3, fill: { color: i === 0 ? NAVY : TINT }, line: { color: i === 0 ? NAVY : LINE, width: 1 }, rectRadius: 0.08, objectName: `step-${i + 1}` });
-    s.addText(t, { x: x + 0.1, y: 1.95, w: bw - 0.2, h: 1.2, fontFace: HEAD, fontSize: 18, bold: true, color: i === 0 ? WHITE : NAVY, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
-    s.addText(sub, { x, y: 3.3, w: bw, h: 0.55, fontFace: BODY, fontSize: 12, color: MUTED, align: 'center', valign: 'top', margin: 0, isTextBox: true });
-    if (i < n - 1) s.addText('→', { x: x + bw, y: 2.25, w: gap, h: 0.6, fontFace: BODY, fontSize: 28, bold: true, color: ACCENT, align: 'center', margin: 0, isTextBox: true });
-  });
-  s.addNotes(m.notes[2]);
-
-  // 4 Implementation table
-  s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: m.name });
-  heading(s, 'Key implementation details', 'IMPLEMENTATION');
-  const rows = [[{ text: 'Area', options: { bold: true, color: WHITE, fill: { color: NAVY } } }, { text: 'What was built', options: { bold: true, color: WHITE, fill: { color: NAVY } } }]]
-    .concat(m.table.map(([a, b], i) => [{ text: a, options: { bold: true, color: NAVY, fill: { color: i % 2 ? WHITE : TINT } } }, { text: b, options: { color: INK, fill: { color: i % 2 ? WHITE : TINT } } }]));
-  s.addTable(rows, { x: 0.5, y: 1.4, w: 9, colW: [2.0, 7.0], rowH: 0.6, fontFace: BODY, fontSize: 14, border: { type: 'solid', color: LINE, pt: 0.75 }, valign: 'middle', margin: [0.04, 0.12, 0.04, 0.12] });
-  s.addNotes(m.notes[3]);
-
-  // 5 Integration
-  s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: m.name });
-  heading(s, 'Interfaces and integration', 'INTEGRATION');
-  [['Interfaces', m.interfaces, 0.5], ['Connections', m.infra, 5.1]].forEach(([h, list, x]) => {
-    s.addShape(pres.ShapeType.roundRect, { x, y: 1.45, w: 4.4, h: 3.1, fill: { color: TINT }, line: { color: LINE, width: 0.75 }, rectRadius: 0.08 });
-    s.addText(h, { x: x + 0.25, y: 1.6, w: 3.9, h: 0.35, fontFace: HEAD, fontSize: 18, bold: true, color: NAVY, margin: 0, isTextBox: true });
-    s.addText(list.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < list.length - 1, paraSpaceAfter: 8 } })), { x: x + 0.25, y: 2.05, w: 3.9, h: 2.4, fontFace: BODY, fontSize: 15, color: INK, valign: 'top', margin: 0, isTextBox: true });
-  });
-  s.addNotes(m.notes[4]);
-
-  // 6 Evidence
-  s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: m.name });
-  heading(s, 'Evidence from the running system', 'RESULTS');
-  m.stats.forEach(([big, label], i) => {
-    const x = 0.5 + i * 3.1;
-    s.addShape(pres.ShapeType.roundRect, { x, y: 1.5, w: 2.8, h: 2.0, fill: { color: WHITE }, line: { color: LINE, width: 1 }, rectRadius: 0.08, shadow: { type: 'outer', color: '000000', opacity: 0.12, blur: 6, offset: 2, angle: 90 } });
-    s.addText(big, { x, y: 1.65, w: 2.8, h: 0.9, fontFace: HEAD, fontSize: big.length > 6 ? 30 : 40, bold: true, color: NAVY, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
-    s.addText(label, { x: x + 0.15, y: 2.6, w: 2.5, h: 0.8, fontFace: BODY, fontSize: 14, color: MUTED, align: 'center', valign: 'top', margin: 0, isTextBox: true });
-  });
-  s.addText(m.evidence, { x: 0.5, y: 3.85, w: 9, h: 0.9, fontFace: BODY, fontSize: 16, italic: true, color: INK, valign: 'top', margin: 0, isTextBox: true });
-  s.addNotes(m.notes[5]);
-
-  // 7 Demo and takeaways
-  s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: m.name });
-  heading(s, 'Live demo and takeaways', 'SUMMARY');
-  s.addText('Demo steps', { x: 0.5, y: 1.4, w: 4.3, h: 0.35, fontFace: HEAD, fontSize: 18, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  s.addText(m.demo.map((t, i) => ({ text: t, options: { bullet: { type: 'number' }, breakLine: i < m.demo.length - 1, paraSpaceAfter: 8 } })), { x: 0.5, y: 1.85, w: 4.3, h: 2.6, fontFace: BODY, fontSize: 16, color: INK, valign: 'top', margin: 0, isTextBox: true });
-  s.addShape(pres.ShapeType.roundRect, { x: 5.2, y: 1.4, w: 4.3, h: 2.6, fill: { color: TINT }, line: { color: LINE, width: 0.75 }, rectRadius: 0.08 });
-  s.addText('Key takeaways', { x: 5.45, y: 1.55, w: 3.8, h: 0.35, fontFace: HEAD, fontSize: 18, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  s.addText(m.take.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < m.take.length - 1, paraSpaceAfter: 8 } })), { x: 5.45, y: 2.0, w: 3.8, h: 2.0, fontFace: BODY, fontSize: 15, color: INK, valign: 'top', margin: 0, isTextBox: true });
-  s.addNotes(m.notes[6]);
-
+function frame(pres, s, kicker, title, n, time) {
+  s.background = { color: BG };
+  s.addText(kicker, { x: 0.6, y: 0.4, w: 7, h: 0.3, fontFace: FONT_B, fontSize: 11, color: CYAN, charSpacing: 4, margin: 0, isTextBox: true });
+  s.addText(title, { x: 0.6, y: 0.75, w: 8.8, h: 0.7, fontFace: FONT_B, fontSize: 30, color: TEXT, margin: 0, isTextBox: true });
+  s.addText(COURSE, { x: 0.6, y: 5.2, w: 6, h: 0.25, fontFace: FONT, fontSize: 9, color: MUTED, margin: 0, isTextBox: true });
+  s.addText(`${n}  ·  ${time}`, { x: 7.4, y: 5.2, w: 2, h: 0.25, fontFace: FONT, fontSize: 9, color: MUTED, align: 'right', margin: 0, isTextBox: true });
 }
 
+function liveChip(pres, s, text) {
+  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.72, w: 4.6, h: 0.36, fill: { color: PANEL }, line: { color: CYAN, width: 0.75 }, rectRadius: 0.18 });
+  s.addText([{ text: 'LIVE  ', options: { bold: true, color: CYAN } }, { text, options: { color: TEXT } }], { x: 0.78, y: 4.72, w: 4.4, h: 0.36, fontFace: FONT, fontSize: 11, valign: 'middle', margin: 0, isTextBox: true });
+}
 
 (async () => {
   const pres = new pptxgen();
@@ -209,68 +94,95 @@ function addMember(pres, m) {
   pres.title = 'REOAGMS: Team Presentation';
   pres.author = 'REOAGMS project team';
   pres.company = 'University of Ruhuna';
-  pres.theme = { headFontFace: HEAD, bodyFontFace: BODY };
-  pres.defineSlideMaster({
-    title: 'CONTENT', background: { color: WHITE },
-    objects: [{ text: { text: COURSE, options: { x: 0.5, y: 5.25, w: 7.5, h: 0.25, fontFace: BODY, fontSize: 10, color: MUTED, margin: 0 } } }],
-    slideNumber: { x: 9.0, y: 5.25, w: 0.5, h: 0.25, fontFace: BODY, fontSize: 10, color: MUTED, align: 'right' },
+  pres.theme = { headFontFace: FONT_B, bodyFontFace: FONT };
+
+  SLIDES.forEach((d, idx) => {
+    const num = String(idx + 1).padStart(2, '0');
+    const s = pres.addSlide();
+    s.addNotes(d.who + ' (' + d.time + '): ' + d.say);
+
+    if (d.kind === 'title') {
+      s.background = { color: BG };
+      s.addText('EC8208  ·  SOFTWARE ARCHITECTURE', { x: 0.7, y: 0.9, w: 8.6, h: 0.3, fontFace: FONT_B, fontSize: 12, color: CYAN, charSpacing: 5, margin: 0, isTextBox: true });
+      s.addText('REOAGMS', { x: 0.7, y: 1.4, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 66, color: TEXT, margin: 0, isTextBox: true });
+      s.addText('Renewable Energy Operations, Asset and Grid Management System', { x: 0.7, y: 2.65, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 20, color: MUTED, margin: 0, isTextBox: true });
+      s.addText('Charith  ·  Nemal  ·  Govindu  ·  Thurunu  ·  Yasiru  ·  Sachinthana', { x: 0.7, y: 4.35, w: 8.6, h: 0.35, fontFace: FONT_B, fontSize: 14, color: TEXT, margin: 0, isTextBox: true });
+      s.addText('Department of Electrical and Information Engineering  ·  University of Ruhuna', { x: 0.7, y: 4.75, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: MUTED, margin: 0, isTextBox: true });
+    } else if (d.kind === 'arch') {
+      frame(pres, s, '02 · CHARITH · ARCHITECTURE', 'One gateway, six independent services', num, d.time);
+      s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.65, w: 8.8, h: 0.5, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.08 });
+      s.addText('React console  ·  nginx  ·  live updates over WebSocket', { x: 0.6, y: 1.65, w: 8.8, h: 0.5, fontFace: FONT, fontSize: 13, color: TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 2.35, w: 8.8, h: 0.5, fill: { color: CYAN }, line: { color: CYAN, width: 0.75 }, rectRadius: 0.08 });
+      s.addText('API Gateway  ·  JWT validation  ·  role policy', { x: 0.6, y: 2.35, w: 8.8, h: 0.5, fontFace: FONT_B, fontSize: 14, color: BG, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      const w = (8.8 - 5 * 0.12) / 6;
+      ARCH_SERVICES.forEach((name, i) => {
+        const x = 0.6 + i * (w + 0.12);
+        s.addShape(pres.ShapeType.roundRect, { x, y: 3.05, w, h: 0.85, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.08 });
+        s.addText(name, { x, y: 3.1, w, h: 0.45, fontFace: FONT_B, fontSize: 11, color: TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        s.addText('PostgreSQL', { x, y: 3.5, w, h: 0.3, fontFace: FONT, fontSize: 9, color: MUTED, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      });
+      s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.1, w: 8.8, h: 0.5, fill: { color: PANEL }, line: { color: LIME, width: 0.75 }, rectRadius: 0.08 });
+      s.addText('RabbitMQ events  ·  Redis cache  ·  Prometheus and Grafana', { x: 0.6, y: 4.1, w: 8.8, h: 0.5, fontFace: FONT, fontSize: 13, color: TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      liveChip(pres, s, d.screen.split(':')[0] + ': sign in, Control room');
+    } else if (d.kind === 'svc') {
+      frame(pres, s, `${d.n} · ${d.who.toUpperCase()} · ${d.name.toUpperCase()}`, d.head, num, d.time);
+      const n = d.flow.length, gap = 0.3, bw = (8.8 - gap * (n - 1)) / n;
+      d.flow.forEach(([t, sub], i) => {
+        const x = 0.6 + i * (bw + gap);
+        s.addShape(pres.ShapeType.roundRect, { x, y: 1.75, w: bw, h: 1.0, fill: { color: i === 0 ? CYAN : PANEL }, line: { color: i === 0 ? CYAN : EDGE, width: 0.75 }, rectRadius: 0.08 });
+        s.addText(t, { x, y: 1.82, w: bw, h: 0.5, fontFace: FONT_B, fontSize: 15, color: i === 0 ? BG : TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        s.addText(sub, { x, y: 2.28, w: bw, h: 0.35, fontFace: FONT, fontSize: 11, color: i === 0 ? BG : MUTED, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        if (i < n - 1) s.addText('›', { x: x + bw, y: 1.95, w: gap, h: 0.6, fontFace: FONT_B, fontSize: 24, color: CYAN, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      });
+      const sw = (8.8 - 2 * 0.3) / 3;
+      d.stats.forEach(([big, label], i) => {
+        const x = 0.6 + i * (sw + 0.3);
+        s.addShape(pres.ShapeType.line, { x, y: 3.2, w: sw, h: 0, line: { color: EDGE, width: 1 } });
+        s.addText(big, { x, y: 3.3, w: sw, h: 0.7, fontFace: FONT_B, fontSize: big.length > 8 ? 24 : 32, color: CYAN, valign: 'middle', margin: 0, isTextBox: true });
+        s.addText(label, { x, y: 4.0, w: sw, h: 0.35, fontFace: FONT, fontSize: 12, color: MUTED, valign: 'top', margin: 0, isTextBox: true });
+      });
+      liveChip(pres, s, d.screen.split(':')[0].split(',')[0]);
+    } else if (d.kind === 'rbac') {
+      frame(pres, s, '08 · CHARITH · SECURITY', 'Five roles, enforced at the gateway', num, d.time);
+      ROLES.forEach(([role, can], i) => {
+        const y = 1.7 + i * 0.5;
+        s.addShape(pres.ShapeType.roundRect, { x: 0.6, y, w: 8.8, h: 0.42, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.06 });
+        s.addText(role, { x: 0.8, y, w: 3.0, h: 0.42, fontFace: FONT_B, fontSize: 13, color: CYAN, valign: 'middle', margin: 0, isTextBox: true });
+        s.addText(can, { x: 3.9, y, w: 5.4, h: 0.42, fontFace: FONT, fontSize: 13, color: TEXT, valign: 'middle', margin: 0, isTextBox: true });
+      });
+      liveChip(pres, s, 'executive sign-in, read-only');
+    } else if (d.kind === 'ops') {
+      frame(pres, s, '09 · ALL MEMBERS · OPERATIONS AND QUALITY', 'Observable, tested, one command to run', num, d.time);
+      const sw = (8.8 - 3 * 0.3) / 4;
+      OPS.forEach(([big, label], i) => {
+        const x = 0.6 + i * (sw + 0.3);
+        s.addShape(pres.ShapeType.line, { x, y: 2.0, w: sw, h: 0, line: { color: EDGE, width: 1 } });
+        s.addText(big, { x, y: 2.15, w: sw, h: 0.9, fontFace: FONT_B, fontSize: 46, color: i === 3 ? LIME : CYAN, valign: 'middle', margin: 0, isTextBox: true });
+        s.addText(label, { x, y: 3.1, w: sw, h: 0.35, fontFace: FONT, fontSize: 13, color: MUTED, margin: 0, isTextBox: true });
+      });
+      liveChip(pres, s, 'Grafana platform health');
+    } else {
+      s.background = { color: BG };
+      s.addText('Thank you', { x: 0.7, y: 1.7, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 60, color: TEXT, margin: 0, isTextBox: true });
+      s.addText('Questions and discussion', { x: 0.7, y: 3.0, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 22, color: CYAN, margin: 0, isTextBox: true });
+      s.addText('REOAGMS  ·  EC8208 Software Architecture  ·  University of Ruhuna', { x: 0.7, y: 4.7, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: MUTED, margin: 0, isTextBox: true });
+    }
   });
 
-  // Team title
-  pres.addSection({ title: 'Introduction' });
-  let s = pres.addSlide({ sectionTitle: 'Introduction' });
-  s.background = { color: WHITE };
-  s.addText('EC8208 SOFTWARE ARCHITECTURE · CONTINUOUS ASSESSMENT 01', { x: 0.7, y: 0.8, w: 8.6, h: 0.3, fontFace: BODY, fontSize: 12, bold: true, color: ACCENT, charSpacing: 3, margin: 0, isTextBox: true });
-  s.addText('Renewable Energy Operations, Asset and Grid Management System', { x: 0.7, y: 1.2, w: 8.6, h: 1.9, fontFace: HEAD, fontSize: 36, bold: true, color: NAVY, margin: 0, valign: 'top', isTextBox: true });
-  s.addText('A microservices and event-driven platform for distributed renewable energy facilities', { x: 0.7, y: 3.5, w: 8.6, h: 0.5, fontFace: BODY, fontSize: 18, color: INK, margin: 0, isTextBox: true });
-  s.addText('Department of Electrical and Information Engineering\nUniversity of Ruhuna', { x: 0.7, y: 4.4, w: 8.6, h: 0.7, fontFace: BODY, fontSize: 14, color: MUTED, margin: 0, isTextBox: true });
-  s.addNotes('Good morning. We are presenting REOAGMS, a microservices and event-driven platform for monitoring and maintaining distributed renewable energy facilities. Six of us each built a service, and we integrated them as one system.');
-
-  // Team overview
-  s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: 'Introduction' });
-  s.addText('THE TEAM', { x: 0.5, y: 0.3, w: 9, h: 0.25, fontFace: BODY, fontSize: 12, bold: true, color: ACCENT, charSpacing: 3, margin: 0, isTextBox: true });
-  s.addText('Who built what', { x: 0.5, y: 0.55, w: 9, h: 0.6, fontFace: HEAD, fontSize: 30, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  const head = (t) => ({ text: t, options: { bold: true, color: WHITE, fill: { color: NAVY } } });
-  const team = [
-    ['Charith', 'Architecture, Identity, API Gateway, console, Docker, RabbitMQ, Kubernetes, integration'],
-    ['Nemal', 'Asset Service: facilities, assets, sensors, images, search'],
-    ['Govindu', 'Monitoring Service: readings, telemetry, alert rules, alerts'],
-    ['Thurunu', 'Maintenance Service: work orders, tasks, technicians, history'],
-    ['Yasiru', 'Notification Service: email, SMS, templates, retry, consumer'],
-    ['Sachinthana', 'Analytics Service: KPIs, reports, export'],
-    ['All members', 'Tests, API documentation, validation, error handling'],
-  ];
-  s.addTable([[head('Member'), head('Responsibility')]].concat(team.map(([a, b], i) => [
-    { text: a, options: { bold: true, color: NAVY, fill: { color: i % 2 ? WHITE : TINT } } },
-    { text: b, options: { color: INK, fill: { color: i % 2 ? WHITE : TINT } } }])),
-  { x: 0.5, y: 1.3, w: 9, colW: [1.8, 7.2], rowH: 0.42, fontFace: BODY, fontSize: 14, border: { type: 'solid', color: LINE, pt: 0.75 }, valign: 'middle', margin: [0.03, 0.12, 0.03, 0.12] });
-  s.addNotes('Here is who built what. Charith owns the architecture, identity, gateway and integration. Nemal built the Asset Service, Govindu the Monitoring Service, Thurunu the Maintenance Service, Yasiru the Notification Service and Sachinthana the Analytics Service. All of us wrote the tests, documentation, validation and error handling for our own services.');
-
-  for (const m of MEMBERS) addMember(pres, m);
-
-  // Closing
-  pres.addSection({ title: 'Conclusion' });
-  s = pres.addSlide({ sectionTitle: 'Conclusion' });
-  s.background = { color: WHITE };
-  s.addText('Thank you', { x: 0.7, y: 1.6, w: 8.6, h: 1.0, fontFace: HEAD, fontSize: 48, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  s.addText('Questions and discussion', { x: 0.7, y: 2.7, w: 8.6, h: 0.5, fontFace: BODY, fontSize: 22, color: INK, margin: 0, isTextBox: true });
-  s.addText('REOAGMS · EC8208 Software Architecture · University of Ruhuna', { x: 0.7, y: 4.4, w: 8.6, h: 0.4, fontFace: BODY, fontSize: 14, color: MUTED, margin: 0, isTextBox: true });
-  s.addNotes('Thank you for listening. We are happy to answer your questions.');
-
   await pres.writeFile({ fileName: path.join(OUT, 'REOAGMS-Team-Presentation.pptx') });
-  console.log('built single team deck');
+  console.log('built deck:', SLIDES.length, 'slides');
 
-  // Word-for-word narration for the script PDF
-  let md = '';
-  for (const m of MEMBERS) {
-    md += `\n### ${m.name}\n\n`;
-    m.notes.forEach((t, i) => { md += `**Slide ${i + 1}.** ${t}\n\n`; });
-  }
-  fs.writeFileSync(path.join(__dirname, 'src', 'narration.md'), md);
-  const segs = MEMBERS.flatMap((m) => m.live.map((l) => ({ ...l, name: m.name }))).sort((a, b) => a.time.localeCompare(b.time, undefined, { numeric: true }));
-  let live = '';
-  const NL = '\n';
-  for (const g of segs) live += `### ${g.time} · ${g.name}${NL}${NL}*On screen:* ${g.screen}${NL}${NL}**${g.name} says:** ${g.say}${NL}${NL}`;
-  live += `### 4:50–5:00 · All members${NL}${NL}**All say:** Thank you.${NL}${NL}`;
-  fs.writeFileSync(path.join(__dirname, 'src', 'live.md'), live);
+  // Word-for-word script (rendered into DEMO_SCRIPT.pdf after the fixed header)
+  const words = SLIDES.reduce((a, d) => a + d.say.split(/\s+/).length, 0);
+  let md = `| Slide | Time | Speaker |\n|---|---|---|\n`;
+  SLIDES.forEach((d, i) => { md += `| ${i + 1} | ${d.time} | ${d.who} |\n`; });
+  md += `\nTotal spoken text: about ${words} words, which is under 5 minutes at a calm pace, leaving a few seconds for clicks.\n\n## The exact words\n\n`;
+  SLIDES.forEach((d, i) => {
+    md += `### Slide ${i + 1} · ${d.time} · ${d.who}\n\n*On screen:* ${d.screen}\n\n`;
+    if (d.say.includes('CHARITH:') || d.say.startsWith('ALL:')) {
+      d.say.split(/\s(?=[A-Z]{3,}:)/).forEach((p) => { const [who, ...r] = p.split(': '); md += `**${who.charAt(0) + who.slice(1).toLowerCase()} says:** ${r.join(': ')}\n\n`; });
+    } else md += `**${d.who} says:** ${d.say}\n\n`;
+  });
+  fs.writeFileSync(path.join(__dirname, 'src', 'live.md'), md);
+  console.log('words', words);
 })();

@@ -14,7 +14,7 @@ table{border-collapse:collapse;width:100%;margin:8pt 0;font-size:10pt}th{backgro
 strong{color:#1b2a49}ul,ol{margin:4pt 0 4pt 18pt}`;
 const browser = await puppeteer.launch({ executablePath: exe, headless: true, args: ['--no-sandbox'] });
 for (const name of ['DEMO_SCRIPT', 'TEAM_GUIDE']) {
-  const parts = name === 'DEMO_SCRIPT' ? ['DEMO_SCRIPT', 'live', 'PART_B', 'narration'] : [name];
+  const parts = name === 'DEMO_SCRIPT' ? ['DEMO_SCRIPT', 'live'] : [name];
   const py = "import markdown,sys; print(markdown.markdown(''.join(open(f,encoding='utf-8').read()+chr(10)*2 for f in sys.argv[1:]),extensions=['tables','fenced_code']))";
   const html = execFileSync('python', ['-c', py, ...parts.map((x) => path.join(here, 'src', `${x}.md`))], { encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
   const page = await browser.newPage();
