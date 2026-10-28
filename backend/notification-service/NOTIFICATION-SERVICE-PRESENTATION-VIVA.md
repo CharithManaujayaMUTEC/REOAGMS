@@ -229,3 +229,23 @@ Be accurate in the viva:
 
 > The SMS provider integration is currently a structured placeholder. The application supports SMS request handling and persistence, while a real provider can be connected through `SmsSenderService`.
 
+## 7. Retry Handling
+
+Relevant class:
+
+- `NotificationRetryScheduler`
+
+> If a notification fails, the service records the failure reason and retry count. A scheduled retry process periodically searches for failed notifications and attempts delivery again until the maximum retry limit is reached.
+
+Configuration:
+
+```properties
+notification.retry.max-attempts=3
+notification.retry.fixed-delay-ms=60000
+```
+
+This means:
+
+- Maximum retry attempts: `3`
+- Retry interval: `60 seconds`
+
