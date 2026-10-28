@@ -249,3 +249,17 @@ This means:
 - Maximum retry attempts: `3`
 - Retry interval: `60 seconds`
 
+## 8. Database
+
+> The service uses PostgreSQL with Spring Data JPA. The main database entities are notifications, email templates, and SMS notifications. JPA maps the Java model classes to database tables, while repositories provide database operations.
+
+Database configuration:
+
+```text
+Database: reoagms_notification
+Port: 5432
+Application port: 8085
+```
+
+Do not expose real passwords or secrets during the presentation. Explain that credentials should be moved to environment variables or a secrets manager in production.
+
