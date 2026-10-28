@@ -2,6 +2,7 @@
 target/
 *.class
 *.jar
+/backend/identity-service/bin/
 
 # Node
 node_modules/
