@@ -11,6 +11,7 @@ services:
       - "5433:5432"
     volumes:
       - identity_data:/var/lib/postgresql/data
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -26,6 +27,7 @@ services:
       - "5434:5432"
     volumes:
       - asset_data:/var/lib/postgresql/data
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -41,6 +43,7 @@ services:
       - "5435:5432"
     volumes:
       - monitoring_data:/var/lib/postgresql/data
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -56,6 +59,7 @@ services:
       - "5436:5432"
     volumes:
       - analytics_data:/var/lib/postgresql/data
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -88,6 +92,15 @@ services:
       - reoagms-network
 
 
+  redis:
+    image: redis:7-alpine
+    container_name: reoagms-redis
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    restart: unless-stopped
+    networks:
+      - reoagms-network
+
+
   rabbitmq:
     image: rabbitmq:4-management
     container_name: reoagms-rabbitmq
@@ -97,6 +110,7 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -114,8 +128,11 @@ services:
       SERVER_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-cmVvYWdtcy1kZXZlbG9wbWVudC1zZWNyZXQta2V5LWN1c3RvbS1sb25nLXNlY3JldC0zMg==}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      REOAGMS_SEED_DEMO_USERS: ${REOAGMS_SEED_DEMO_USERS:-true}
+      REOAGMS_SEED_DEMO_PASSWORD: ${DEMO_PASSWORD:-Reoagms@2026}
     ports:
       - "8081:8081"
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -133,6 +150,7 @@ services:
       SERVER_PORT: 8082
     ports:
       - "8082:8082"
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -144,7 +162,9 @@ services:
     depends_on:
       - monitoring-db
       - rabbitmq
+      - redis
     environment:
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_DATASOURCE_URL: jdbc:postgresql://monitoring-db:5432/monitoring_db
       SPRING_DATASOURCE_USERNAME: monitoring_user
       SPRING_DATASOURCE_PASSWORD: monitoring_password
@@ -155,6 +175,7 @@ services:
       SERVER_PORT: 8083
     ports:
       - "8083:8083"
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -176,6 +197,7 @@ services:
       MAINTENANCE_SERVICE_URL: http://maintenance-service:8084
     ports:
       - "8085:8085"
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -185,7 +207,12 @@ services:
     container_name: reoagms-maintenance-service
     depends_on:
       - maintenance-db
+      - rabbitmq
     environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: reoagms
+      SPRING_RABBITMQ_PASSWORD: reoagms_password
       SPRING_DATASOURCE_URL: jdbc:postgresql://maintenance-db:5432/maintenance_db
       SPRING_DATASOURCE_USERNAME: maintenance_user
       SPRING_DATASOURCE_PASSWORD: maintenance_password
@@ -244,17 +271,18 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
     ports:
       - "8080:8080"
+    restart: unless-stopped
     networks:
       - reoagms-network
 
 
   prometheus:
-    image: prom/prometheus
+    build:
+      context: ./infrastructure/prometheus
     container_name: reoagms-prometheus
-    volumes:
-      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    restart: unless-stopped
     networks:
       - reoagms-network
 
@@ -262,30 +290,47 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
     container_name: reoagms-frontend
     depends_on:
       - api-gateway
-    environment:
-      VITE_API_BASE_URL: /api
+      - notification-service
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "5173:80"
+    restart: unless-stopped
     networks:
       - reoagms-network
 
 
   grafana:
-    image: grafana/grafana
+    build:
+      context: ./infrastructure/grafana
     container_name: reoagms-grafana
     depends_on:
       - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: reoagms
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/reoagms.json
     ports:
-      - "3000:3000"
-    volumes:
-      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+      - "${GRAFANA_PORT:-3000}:3000"
+    restart: unless-stopped
+    networks:
+      - reoagms-network
+
+
+  simulator:
+    build:
+      context: ./scripts/simulator
+    container_name: reoagms-simulator
+    depends_on:
+      - api-gateway
+    environment:
+      GATEWAY_URL: http://api-gateway:8080
+      SIM_ADMIN_EMAIL: admin@reoagms.com
+      SIM_ADMIN_PASSWORD: ${DEMO_PASSWORD:-Reoagms@2026}
+      SIM_INTERVAL_MS: ${SIM_INTERVAL_MS:-4000}
+      SIM_SOLAR_MODE: ${SIM_SOLAR_MODE:-demo}
+    restart: unless-stopped
     networks:
       - reoagms-network
 
