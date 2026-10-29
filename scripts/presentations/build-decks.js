@@ -73,6 +73,7 @@ const SLIDES = [
   },
 ];
 
+const GROUP = [['EG/2021/4707', 'Perera G C M'], ['EG/2021/4620', 'Kularathne MDYB'], ['EG/2021/4710', 'Perera K P D N'], ['EG/2021/4828', 'Thejana BPGL'], ['EG/2021/4701', 'Pabasara PMGT'], ['EG/2021/4770', 'Sachinthana K AD']];
 const ARCH_SERVICES = ['Identity', 'Asset', 'Monitoring', 'Maintenance', 'Notification', 'Analytics'];
 const ROLES = [['Administrator', 'Everything, users and audit log'], ['Operations Manager', 'Assets, rules, work orders, reports'], ['Plant Operator', 'Monitor and handle alerts'], ['Maintenance Engineer', 'Assign and complete work orders'], ['Executive', 'Read-only dashboards and reports']];
 const OPS = [['60', 'test methods'], ['7', 'services monitored'], ['19', 'containers'], ['1', 'command to start']];
@@ -114,11 +115,14 @@ function liveChip(pres, s, text) {
     if (d.kind === 'title') {
       s.background = { color: INK };
       rings(pres, s);
-      s.addText('EC8208  ·  SOFTWARE ARCHITECTURE', { x: 0.7, y: 0.9, w: 8.6, h: 0.3, fontFace: FONT_B, fontSize: 12, color: GLOW, charSpacing: 5, margin: 0, isTextBox: true });
+      s.addText('GROUP 9  ·  EC8208  ·  SOFTWARE ARCHITECTURE', { x: 0.7, y: 0.9, w: 8.6, h: 0.3, fontFace: FONT_B, fontSize: 12, color: GLOW, charSpacing: 5, margin: 0, isTextBox: true });
       s.addText('REOAGMS', { x: 0.7, y: 1.4, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 66, color: INK_TEXT, margin: 0, isTextBox: true });
       s.addText('Renewable Energy Operations, Asset and Grid Management System', { x: 0.7, y: 2.65, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 20, color: INK_MUTED, margin: 0, isTextBox: true });
-      s.addText('Charith  ·  Nemal  ·  Govindu  ·  Thurunu  ·  Yasiru  ·  Sachinthana', { x: 0.7, y: 4.35, w: 8.6, h: 0.35, fontFace: FONT_B, fontSize: 14, color: INK_TEXT, margin: 0, isTextBox: true });
-      s.addText('Department of Electrical and Information Engineering  ·  University of Ruhuna', { x: 0.7, y: 4.75, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: INK_MUTED, margin: 0, isTextBox: true });
+      GROUP.forEach(([id, name], i) => {
+        const x = 0.7 + Math.floor(i / 3) * 3.4, y = 3.5 + (i % 3) * 0.38;
+        s.addText([{ text: id + '   ', options: { color: GLOW } }, { text: name, options: { color: INK_TEXT, bold: true } }], { x, y, w: 3.3, h: 0.32, fontFace: FONT, fontSize: 13, margin: 0, valign: 'middle', isTextBox: true });
+      });
+      s.addText('Department of Electrical and Information Engineering  ·  University of Ruhuna', { x: 0.7, y: 4.85, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: INK_MUTED, margin: 0, isTextBox: true });
     } else if (d.kind === 'arch') {
       frame(pres, s, '02 · CHARITH · ARCHITECTURE', 'One gateway, six independent services', num, d.time);
       s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.65, w: 8.8, h: 0.5, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.08 });
