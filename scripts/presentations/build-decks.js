@@ -8,10 +8,10 @@ const pptxgen = require('pptxgenjs');
 const OUT = path.join(__dirname, '..', '..', 'deliverables');
 fs.mkdirSync(OUT, { recursive: true });
 
-// Light, airy content slides with one teal accent; dark ink slides for the title and the close.
-const BG = 'F6F8FB', PANEL = 'FFFFFF', EDGE = 'DCE3EE', TEXT = '0B1B33', MUTED = '64748B', CYAN = '0891B2', LIME = '16A34A', WHITE = 'FFFFFF', TINT = 'E6F4F8';
-const INK = '0B1220', INK_EDGE = '1E2A44', INK_TEXT = 'F1F5FB', INK_MUTED = '8C9BB8', GLOW = '22D3EE';
-const FONT = 'Segoe UI', FONT_B = 'Segoe UI Semibold';
+// Black-to-electric-blue gradient (assets/*.png from make-backgrounds.py) with white split slides.
+const BLACK = '05060C', BLUE = '2B3DFF', BLUE_L = '8FA0FF', WHITE = 'FFFFFF', GREY = '5B6478', SOFT = 'F0F2F9', PALE = 'C9D1FF';
+const ASSETS = path.join(__dirname, 'assets');
+const FONT = 'Segoe UI Light', FONT_R = 'Segoe UI', FONT_B = 'Segoe UI Semibold';
 const COURSE = 'EC8208 Software Architecture  ·  University of Ruhuna';
 
 // Each service slide: flow (3-4 steps), stats (3), live cue, spoken words.
@@ -78,25 +78,51 @@ const ARCH_SERVICES = ['Identity', 'Asset', 'Monitoring', 'Maintenance', 'Notifi
 const ROLES = [['Administrator', 'Everything, users and audit log'], ['Operations Manager', 'Assets, rules, work orders, reports'], ['Plant Operator', 'Monitor and handle alerts'], ['Maintenance Engineer', 'Assign and complete work orders'], ['Executive', 'Read-only dashboards and reports']];
 const OPS = [['60', 'test methods'], ['7', 'services monitored'], ['19', 'containers'], ['1', 'command to start']];
 
-function frame(pres, s, kicker, title, n, time) {
-  s.background = { color: BG };
-  s.addShape(pres.ShapeType.rect, { x: 0.6, y: 0.47, w: 0.09, h: 0.09, fill: { color: CYAN }, line: { color: CYAN, width: 0 } });
-  s.addText(kicker, { x: 0.82, y: 0.4, w: 8, h: 0.24, fontFace: FONT_B, fontSize: 10.5, color: CYAN, charSpacing: 4, margin: 0, isTextBox: true });
-  s.addText(title, { x: 0.6, y: 0.78, w: 8.8, h: 0.7, fontFace: FONT_B, fontSize: 32, color: TEXT, margin: 0, isTextBox: true });
-  s.addShape(pres.ShapeType.line, { x: 0.6, y: 5.12, w: 8.8, h: 0, line: { color: EDGE, width: 0.75 } });
-  s.addText(COURSE, { x: 0.6, y: 5.2, w: 6, h: 0.25, fontFace: FONT, fontSize: 9, color: MUTED, margin: 0, isTextBox: true });
-  s.addText(`${n}  ·  ${time}`, { x: 7.4, y: 5.2, w: 2, h: 0.25, fontFace: FONT, fontSize: 9, color: MUTED, align: 'right', margin: 0, isTextBox: true });
+// Logo mark, menu dots and a corner triangle, drawn in the zone's ink colour.
+function chrome(pres, s, onDark, corner) {
+  const c = onDark ? WHITE : BLACK;
+  [0, 1, 2].forEach((i) => s.addShape(pres.ShapeType.rect, { x: 0.6 + i * 0.1, y: 0.26, w: 0.07, h: 0.17, fill: { color: c }, line: { color: c, width: 0 } }));
+  [0, 1, 2].forEach((i) => s.addShape(pres.ShapeType.ellipse, { x: 9.12 + i * 0.12, y: 0.32, w: 0.06, h: 0.06, fill: { color: c }, line: { color: c, width: 0 } }));
+  if (corner !== false) s.addShape(pres.ShapeType.rtTriangle, { x: 9.24, y: 0.66, w: 0.16, h: 0.16, rotate: 180, fill: { color: c }, line: { color: c, width: 0 } });
 }
 
-function rings(pres, s) {
-  [[6.6, -1.2, 5.2], [7.5, -0.3, 3.4], [8.4, 0.6, 1.6]].forEach(([x, y, d], i) => {
-    s.addShape(pres.ShapeType.ellipse, { x, y: y + 0.4, w: d, h: d, fill: { type: 'none' }, line: { color: i === 2 ? GLOW : INK_EDGE, width: i === 2 ? 1.25 : 1 } });
-  });
+// Title with its last words in the accent colour (the text itself is untouched).
+function titleRuns(title, onDark) {
+  const w = title.split(' ');
+  const k = w.length >= 5 ? 3 : Math.max(1, Math.min(2, w.length - 1));
+  return [
+    { text: w.slice(0, w.length - k).join(' ') + ' ', options: { color: onDark ? WHITE : BLACK } },
+    { text: w.slice(w.length - k).join(' '), options: { color: onDark ? BLUE_L : BLUE } },
+  ];
+}
+
+function frame(pres, s, kicker, title, n, time, mode, big) {
+  const dark = mode === 'dark';
+  s.background = { path: path.join(ASSETS, dark ? 'dark.png' : 'split.png') };
+  chrome(pres, s, dark && true, true);
+  const ky = big ? 1.1 : 0.6, ty = big ? 1.4 : 0.9;
+  s.addText(kicker, { x: 0.6, y: ky, w: 8.8, h: 0.24, fontFace: FONT_B, fontSize: 10.5, color: dark ? BLUE_L : BLUE, charSpacing: 3, margin: 0, isTextBox: true });
+  s.addText(titleRuns(title, dark), { x: 0.6, y: ty, w: 8.8, h: 0.75, fontFace: FONT, fontSize: big ? 34 : 32, margin: 0, isTextBox: true });
+  s.addShape(pres.ShapeType.line, { x: 0.6, y: 5.12, w: 8.8, h: 0, line: { color: WHITE, width: 0.75, transparency: 75 } });
+  s.addText(COURSE, { x: 0.6, y: 5.2, w: 6, h: 0.25, fontFace: FONT_R, fontSize: 9, color: PALE, margin: 0, isTextBox: true });
+  s.addText(`${n}  ·  ${time}`, { x: 7.4, y: 5.2, w: 2, h: 0.25, fontFace: FONT_R, fontSize: 9, color: PALE, align: 'right', margin: 0, isTextBox: true });
+}
+
+function glass(pres, s, x, y, w, h, solid) {
+  s.addShape(pres.ShapeType.roundRect, solid
+    ? { x, y, w, h, fill: { color: BLUE }, line: { color: BLUE, width: 0.75 }, rectRadius: 0.06 }
+    : { x, y, w, h, fill: { color: WHITE, transparency: 90 }, line: { color: WHITE, width: 0.75, transparency: 70 }, rectRadius: 0.06 });
 }
 
 function liveChip(pres, s, text) {
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.7, w: 4.6, h: 0.36, fill: { color: TINT }, line: { color: TINT, width: 0 }, rectRadius: 0.18 });
-  s.addText([{ text: 'LIVE  ', options: { bold: true, color: CYAN } }, { text, options: { color: TEXT } }], { x: 0.8, y: 4.7, w: 4.3, h: 0.36, fontFace: FONT, fontSize: 11, valign: 'middle', margin: 0, isTextBox: true });
+  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.7, w: 4.6, h: 0.36, fill: { color: WHITE, transparency: 88 }, line: { color: WHITE, width: 0.75, transparency: 70 }, rectRadius: 0.18 });
+  s.addText([{ text: 'LIVE  ', options: { bold: true, color: BLUE_L } }, { text, options: { color: WHITE } }], { x: 0.8, y: 4.7, w: 4.3, h: 0.36, fontFace: FONT_R, fontSize: 11, valign: 'middle', margin: 0, isTextBox: true });
+}
+
+function stat(pres, s, x, y, w, big, label, size, color) {
+  s.addShape(pres.ShapeType.line, { x, y, w: 0.5, h: 0, line: { color: BLUE_L, width: 2.25 } });
+  s.addText(big, { x, y: y + 0.1, w, h: 0.8, fontFace: FONT, fontSize: size, color: color || WHITE, valign: 'middle', margin: 0, isTextBox: true });
+  s.addText(label, { x, y: y + 0.9, w, h: 0.32, fontFace: FONT_R, fontSize: 12, color: PALE, valign: 'top', margin: 0, isTextBox: true });
 }
 
 (async () => {
@@ -105,83 +131,73 @@ function liveChip(pres, s, text) {
   pres.title = 'REOAGMS: Team Presentation';
   pres.author = 'REOAGMS project team';
   pres.company = 'University of Ruhuna';
-  pres.theme = { headFontFace: FONT_B, bodyFontFace: FONT };
+  pres.theme = { headFontFace: FONT_B, bodyFontFace: FONT_R };
 
   SLIDES.forEach((d, idx) => {
     const num = String(idx + 1).padStart(2, '0');
     const s = pres.addSlide();
     s.addNotes(d.who + ' (' + d.time + '): ' + d.say);
 
+    if (d.kind === 'title' || d.kind === 'end') {
+      s.background = { path: path.join(ASSETS, 'dark.png') };
+      chrome(pres, s, true, true);
+    }
     if (d.kind === 'title') {
-      s.background = { color: INK };
-      rings(pres, s);
-      s.addText('GROUP 9  ·  EC8208  ·  SOFTWARE ARCHITECTURE', { x: 0.7, y: 0.9, w: 8.6, h: 0.3, fontFace: FONT_B, fontSize: 12, color: GLOW, charSpacing: 5, margin: 0, isTextBox: true });
-      s.addText('REOAGMS', { x: 0.7, y: 1.4, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 66, color: INK_TEXT, margin: 0, isTextBox: true });
-      s.addText('Renewable Energy Operations, Asset and Grid Management System', { x: 0.7, y: 2.65, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 20, color: INK_MUTED, margin: 0, isTextBox: true });
+      s.addText('GROUP 9  ·  EC8208  ·  SOFTWARE ARCHITECTURE', { x: 0.7, y: 0.9, w: 8.6, h: 0.3, fontFace: FONT_B, fontSize: 12, color: BLUE_L, charSpacing: 5, margin: 0, isTextBox: true });
+      s.addText('REOAGMS', { x: 0.7, y: 1.35, w: 8.6, h: 1.2, fontFace: FONT_R, fontSize: 66, color: WHITE, margin: 0, isTextBox: true });
+      s.addText('Renewable Energy Operations, Asset and Grid Management System', { x: 0.7, y: 2.65, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 21, color: PALE, margin: 0, isTextBox: true });
       GROUP.forEach(([id, name], i) => {
         const x = 0.7 + Math.floor(i / 3) * 3.4, y = 3.5 + (i % 3) * 0.38;
-        s.addText([{ text: id + '   ', options: { color: GLOW } }, { text: name, options: { color: INK_TEXT, bold: true } }], { x, y, w: 3.3, h: 0.32, fontFace: FONT, fontSize: 13, margin: 0, valign: 'middle', isTextBox: true });
+        s.addText([{ text: id + '   ', options: { color: BLUE_L } }, { text: name, options: { color: WHITE, bold: true } }], { x, y, w: 3.3, h: 0.32, fontFace: FONT_R, fontSize: 13, margin: 0, valign: 'middle', isTextBox: true });
       });
-      s.addText('Department of Electrical and Information Engineering  ·  University of Ruhuna', { x: 0.7, y: 4.85, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: INK_MUTED, margin: 0, isTextBox: true });
+      s.addText('Department of Electrical and Information Engineering  ·  University of Ruhuna', { x: 0.7, y: 4.85, w: 8.6, h: 0.3, fontFace: FONT_R, fontSize: 11, color: PALE, margin: 0, isTextBox: true });
     } else if (d.kind === 'arch') {
-      frame(pres, s, '02 · CHARITH · ARCHITECTURE', 'One gateway, six independent services', num, d.time);
-      s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.65, w: 8.8, h: 0.5, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.08 });
-      s.addText('React console  ·  nginx  ·  live updates over WebSocket', { x: 0.6, y: 1.65, w: 8.8, h: 0.5, fontFace: FONT, fontSize: 13, color: TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
-      s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 2.35, w: 8.8, h: 0.5, fill: { color: CYAN }, line: { color: CYAN, width: 0.75 }, rectRadius: 0.08 });
-      s.addText('API Gateway  ·  JWT validation  ·  role policy', { x: 0.6, y: 2.35, w: 8.8, h: 0.5, fontFace: FONT_B, fontSize: 14, color: WHITE, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      frame(pres, s, '02 · CHARITH · ARCHITECTURE', 'One gateway, six independent services', num, d.time, 'dark');
+      glass(pres, s, 0.6, 1.75, 8.8, 0.5);
+      s.addText('React console  ·  nginx  ·  live updates over WebSocket', { x: 0.6, y: 1.75, w: 8.8, h: 0.5, fontFace: FONT_R, fontSize: 13, color: WHITE, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      glass(pres, s, 0.6, 2.4, 8.8, 0.5, true);
+      s.addText('API Gateway  ·  JWT validation  ·  role policy', { x: 0.6, y: 2.4, w: 8.8, h: 0.5, fontFace: FONT_B, fontSize: 14, color: WHITE, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
       const w = (8.8 - 5 * 0.12) / 6;
       ARCH_SERVICES.forEach((name, i) => {
         const x = 0.6 + i * (w + 0.12);
-        s.addShape(pres.ShapeType.roundRect, { x, y: 3.05, w, h: 0.85, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.08 });
-        s.addText(name, { x, y: 3.1, w, h: 0.45, fontFace: FONT_B, fontSize: 11, color: TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
-        s.addText('PostgreSQL', { x, y: 3.5, w, h: 0.3, fontFace: FONT, fontSize: 9, color: MUTED, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        glass(pres, s, x, 3.05, w, 0.85);
+        s.addText(name, { x, y: 3.1, w, h: 0.45, fontFace: FONT_B, fontSize: 11, color: WHITE, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        s.addText('PostgreSQL', { x, y: 3.5, w, h: 0.3, fontFace: FONT_R, fontSize: 9, color: PALE, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
       });
-      s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.1, w: 8.8, h: 0.5, fill: { color: PANEL }, line: { color: LIME, width: 0.75 }, rectRadius: 0.08 });
-      s.addText('RabbitMQ events  ·  Redis cache  ·  Prometheus and Grafana', { x: 0.6, y: 4.1, w: 8.8, h: 0.5, fontFace: FONT, fontSize: 13, color: TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      glass(pres, s, 0.6, 4.05, 8.8, 0.5);
+      s.addText('RabbitMQ events  ·  Redis cache  ·  Prometheus and Grafana', { x: 0.6, y: 4.05, w: 8.8, h: 0.5, fontFace: FONT_R, fontSize: 13, color: WHITE, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
       liveChip(pres, s, d.screen.split(':')[0] + ': sign in, Control room');
     } else if (d.kind === 'svc') {
-      frame(pres, s, `${d.n} · ${d.who.toUpperCase()} · ${d.name.toUpperCase()}`, d.head, num, d.time);
+      frame(pres, s, `${d.n} · ${d.who.toUpperCase()} · ${d.name.toUpperCase()}`, d.head, num, d.time, 'split');
       const n = d.flow.length, gap = 0.3, bw = (8.8 - gap * (n - 1)) / n;
       d.flow.forEach(([t, sub], i) => {
         const x = 0.6 + i * (bw + gap);
-        s.addShape(pres.ShapeType.roundRect, { x, y: 1.75, w: bw, h: 1.0, fill: { color: i === 0 ? CYAN : PANEL }, line: { color: i === 0 ? CYAN : EDGE, width: 0.75 }, rectRadius: 0.08 });
-        s.addText(t, { x, y: 1.82, w: bw, h: 0.5, fontFace: FONT_B, fontSize: 15, color: i === 0 ? WHITE : TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
-        s.addText(sub, { x, y: 2.28, w: bw, h: 0.35, fontFace: FONT, fontSize: 11, color: i === 0 ? TINT : MUTED, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
-        if (i < n - 1) s.addText('›', { x: x + bw, y: 1.95, w: gap, h: 0.6, fontFace: FONT_B, fontSize: 24, color: CYAN, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        s.addShape(pres.ShapeType.roundRect, { x, y: 1.75, w: bw, h: 1.0, fill: { color: i === 0 ? BLUE : SOFT }, line: { color: i === 0 ? BLUE : SOFT, width: 0 }, rectRadius: 0.06 });
+        s.addText(t, { x, y: 1.82, w: bw, h: 0.5, fontFace: FONT_B, fontSize: 15, color: i === 0 ? WHITE : BLACK, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        s.addText(sub, { x, y: 2.28, w: bw, h: 0.35, fontFace: FONT_R, fontSize: 11, color: i === 0 ? PALE : GREY, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        if (i < n - 1) s.addText('›', { x: x + bw, y: 1.95, w: gap, h: 0.6, fontFace: FONT_B, fontSize: 24, color: BLUE, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
       });
       const sw = (8.8 - 2 * 0.3) / 3;
-      d.stats.forEach(([big, label], i) => {
-        const x = 0.6 + i * (sw + 0.3);
-        s.addShape(pres.ShapeType.line, { x, y: 3.2, w: 0.5, h: 0, line: { color: CYAN, width: 2.25 } });
-        s.addText(big, { x, y: 3.3, w: sw, h: 0.7, fontFace: FONT_B, fontSize: big.length > 8 ? 24 : 32, color: CYAN, valign: 'middle', margin: 0, isTextBox: true });
-        s.addText(label, { x, y: 4.0, w: sw, h: 0.35, fontFace: FONT, fontSize: 12, color: MUTED, valign: 'top', margin: 0, isTextBox: true });
-      });
+      d.stats.forEach(([big, label], i) => stat(pres, s, 0.6 + i * (sw + 0.3), 3.4, sw, big, label, big.length > 8 ? 26 : 36));
       liveChip(pres, s, d.screen.split(':')[0].split(',')[0]);
     } else if (d.kind === 'rbac') {
-      frame(pres, s, '08 · NEMAL · SECURITY', 'Five roles, enforced at the gateway', num, d.time);
+      frame(pres, s, '08 · NEMAL · SECURITY', 'Five roles, enforced at the gateway', num, d.time, 'dark');
       ROLES.forEach(([role, can], i) => {
         const y = 1.7 + i * 0.5;
-        s.addShape(pres.ShapeType.roundRect, { x: 0.6, y, w: 8.8, h: 0.42, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.06 });
-        s.addText(role, { x: 0.8, y, w: 3.0, h: 0.42, fontFace: FONT_B, fontSize: 13, color: CYAN, valign: 'middle', margin: 0, isTextBox: true });
-        s.addText(can, { x: 3.9, y, w: 5.4, h: 0.42, fontFace: FONT, fontSize: 13, color: TEXT, valign: 'middle', margin: 0, isTextBox: true });
+        glass(pres, s, 0.6, y, 8.8, 0.42);
+        s.addText(role, { x: 0.8, y, w: 3.0, h: 0.42, fontFace: FONT_B, fontSize: 13, color: BLUE_L, valign: 'middle', margin: 0, isTextBox: true });
+        s.addText(can, { x: 3.9, y, w: 5.4, h: 0.42, fontFace: FONT_R, fontSize: 13, color: WHITE, valign: 'middle', margin: 0, isTextBox: true });
       });
       liveChip(pres, s, 'executive sign-in, read-only');
     } else if (d.kind === 'ops') {
-      frame(pres, s, '09 · CHARITH · OPERATIONS AND QUALITY', 'Observable, tested, one command to run', num, d.time);
+      frame(pres, s, '09 · CHARITH · OPERATIONS AND QUALITY', 'Observable, tested, one command to run', num, d.time, 'split', true);
       const sw = (8.8 - 3 * 0.3) / 4;
-      OPS.forEach(([big, label], i) => {
-        const x = 0.6 + i * (sw + 0.3);
-        s.addShape(pres.ShapeType.line, { x, y: 2.0, w: 0.5, h: 0, line: { color: i === 3 ? LIME : CYAN, width: 2.25 } });
-        s.addText(big, { x, y: 2.15, w: sw, h: 0.9, fontFace: FONT_B, fontSize: 46, color: i === 3 ? LIME : CYAN, valign: 'middle', margin: 0, isTextBox: true });
-        s.addText(label, { x, y: 3.1, w: sw, h: 0.35, fontFace: FONT, fontSize: 13, color: MUTED, margin: 0, isTextBox: true });
-      });
+      OPS.forEach(([big, label], i) => stat(pres, s, 0.6 + i * (sw + 0.3), 3.4, sw, big, label, 46, WHITE));
       liveChip(pres, s, 'Grafana platform health');
     } else {
-      s.background = { color: INK };
-      rings(pres, s);
-      s.addText('Thank you', { x: 0.7, y: 1.7, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 60, color: INK_TEXT, margin: 0, isTextBox: true });
-      s.addText('Questions and discussion', { x: 0.7, y: 3.0, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 22, color: GLOW, margin: 0, isTextBox: true });
-      s.addText('REOAGMS  ·  EC8208 Software Architecture  ·  University of Ruhuna', { x: 0.7, y: 4.7, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: INK_MUTED, margin: 0, isTextBox: true });
+      s.addText('Thank you', { x: 0.7, y: 1.7, w: 8.6, h: 1.2, fontFace: FONT_R, fontSize: 60, color: WHITE, margin: 0, isTextBox: true });
+      s.addText('Questions and discussion', { x: 0.7, y: 3.0, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 22, color: BLUE_L, margin: 0, isTextBox: true });
+      s.addText('REOAGMS  ·  EC8208 Software Architecture  ·  University of Ruhuna', { x: 0.7, y: 4.7, w: 8.6, h: 0.3, fontFace: FONT_R, fontSize: 11, color: PALE, margin: 0, isTextBox: true });
     }
   });
 
