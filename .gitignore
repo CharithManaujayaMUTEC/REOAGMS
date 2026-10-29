@@ -37,3 +37,6 @@ coverage/
 
 # Local port remaps for this machine only
 docker-compose.override.yml
+
+# Office lock files
+~$*
