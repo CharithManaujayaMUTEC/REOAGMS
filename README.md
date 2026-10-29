@@ -40,7 +40,7 @@ Self-registration from the login page always creates a *Plant Operator*; only an
 | Prometheus | http://localhost:9090 |
 | RabbitMQ management (`reoagms` / `reoagms_password`) | http://localhost:15672 |
 
-Presentation pack (slides, 5-minute demo script and team guide as PDFs) is in `deliverables/`. Seed only: `.\scripts\seed-database.ps1`.
+Presentation pack (slides, 10-minute demo script and team guide as PDFs) is in `deliverables/`. Seed only: `.\scripts\seed-database.ps1`.
 
 ## How the report maps to the code
 

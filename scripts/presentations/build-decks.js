@@ -17,59 +17,59 @@ const COURSE = 'EC8208 Software Architecture  ·  University of Ruhuna';
 // Each service slide: flow (3-4 steps), stats (3), live cue, spoken words.
 const SLIDES = [
   {
-    kind: 'title', time: '0:00–0:08', who: 'Charith', screen: 'Title slide',
-    say: 'Good morning. We are presenting REOAGMS, a platform that monitors and maintains renewable energy assets in real time.',
+    kind: 'title', time: '0:00–0:15', who: 'Charith', screen: 'Title slide',
+    say: 'Good morning, everyone. We are Group 9, and we are presenting REOAGMS, the Renewable Energy Operations, Asset and Grid Management System. It monitors and maintains renewable energy assets in real time.',
   },
   {
-    kind: 'arch', time: '0:08–0:33', who: 'Charith', screen: 'Console: sign in as admin, then the Control room',
-    say: 'REOAGMS is six Spring Boot microservices behind one API gateway, connected by RabbitMQ events, each with its own PostgreSQL database. I sign in as the administrator, and this is the control room with live data. Nemal will show where it comes from.',
+    kind: 'arch', time: '0:15–1:13', who: 'Charith', screen: 'Console: sign in as admin, then the Control room, pointing at the KPIs, the energy curve and the alert feed',
+    say: 'REOAGMS is six Spring Boot microservices behind one API gateway: identity, asset, monitoring, maintenance, notification and analytics. Each service owns its own PostgreSQL database and never reads another\'s, and they talk to each other through RabbitMQ events. The React console reaches everything through the gateway, which checks the token and the role on every request. I sign in as the administrator, and this is the control room: live generation, open alerts, device health and an hourly energy curve, all coming from real data in the databases. Nemal will show where that data comes from.',
   },
   {
-    kind: 'svc', n: '03', who: 'Nemal', name: 'Asset Service', time: '0:33–1:00', screen: 'Assets page: switch tabs, open Add, then cancel',
+    kind: 'svc', n: '03', who: 'Nemal', name: 'Asset Service', time: '1:13–2:08', screen: 'Assets page: switch the three tabs, search, open Add, submit blank to show validation, then cancel',
     head: 'The registry every service relies on',
     flow: [['Facility', '5 types'], ['Asset', '7 types'], ['Sensor', '9 metrics']],
     stats: [['5 · 11 · 32', 'facilities · assets · sensors'], ['Server-side', 'search and paging'], ['Validated', 'every form']],
-    say: 'Thank you, Charith. The Asset Service owns the registry: five facilities, eleven assets and thirty-two sensors. Lists are searched and paged on the server, and every form is validated, so a blank name is rejected. Govindu will show these assets producing live data.',
+    say: 'Thank you, Charith. The Asset Service owns the registry of everything we monitor. As you can see, there are five facilities, eleven assets and thirty-two sensors, covering solar, wind, hydro, battery storage and tidal. I switch between the facility, asset and sensor tabs, and search runs on the server with paging, so lists stay fast. Now I open the add form and leave the name blank: the form rejects it, because every input is validated. Other services refer to these assets only by ID. Govindu will now show these assets producing live data.',
   },
   {
-    kind: 'svc', n: '04', who: 'Govindu', name: 'Monitoring Service', time: '1:00–1:49', screen: 'Live monitoring page, then the toast and the Alerts page',
+    kind: 'svc', n: '04', who: 'Govindu', name: 'Monitoring Service', time: '2:08–3:46', screen: 'Live monitoring page (tiles and dashed threshold), wait for the toast, then the Alerts page: acknowledge the alert',
     head: 'From a sensor reading to an instant alert',
     flow: [['Reading', 'every few seconds'], ['Rule check', 'threshold'], ['Alert', 'one per asset'], ['RabbitMQ', 'event']],
     stats: [['16,000+', 'readings stored'], ['7', 'alert rules'], ['10 s', 'Redis cached dashboard']],
-    say: 'Thanks, Nemal. The Monitoring Service receives a reading from every sensor and checks it against our alert rules. This tile is a live sensor and the dashed line is its threshold. The simulator has just injected a fault, and here is the alert, instantly. One alert is stored, one event goes to RabbitMQ, and the browser is updated over WebSocket. That same event is now reaching Thurunu.',
+    say: 'Thanks, Nemal. The Monitoring Service receives a reading from every sensor every few seconds and keeps the history: more than sixteen thousand readings are already stored. On the live monitoring page each tile is a real sensor, and the dashed line is its alert threshold. Every reading is checked against our seven alert rules. The simulator has just injected a fault, and here is the toast, instantly. On the Alerts page you can see the alert with its severity, the asset and the value that broke the threshold. Behind this, one alert is stored, and we keep only one open alert per rule and asset, so operators are never flooded. One event is published to RabbitMQ, and the Notification Service pushes it to this browser over WebSocket. The dashboard totals are cached in Redis for ten seconds, and if Redis ever stops, PostgreSQL answers instead. That same event is now reaching Thurunu\'s service.',
   },
   {
-    kind: 'svc', n: '05', who: 'Thurunu', name: 'Maintenance Service', time: '1:49–2:38', screen: 'Maintenance board: newest card, Assign, Start, Complete',
+    kind: 'svc', n: '05', who: 'Thurunu', name: 'Maintenance Service', time: '3:46–5:24', screen: 'Maintenance board: newest card, Assign a technician, Start, Complete, then show the history',
     head: 'Faults become tracked work automatically',
     flow: [['Alert event', 'high or critical'], ['Work order', 'created'], ['Technician', 'assigned'], ['Completed', 'in history']],
     stats: [['0 clicks', 'to open a corrective order'], ['4', 'technicians'], ['1', 'active order per asset']],
-    say: 'Yes. The Maintenance Service received the same event and, because the severity is high, it opened a corrective work order by itself. Here it is on the board. I assign a technician, start the work and complete it. Each step is its own endpoint, and the finished job is saved to the maintenance history. Yasiru will show how people are informed.',
+    say: 'Yes. The Maintenance Service listens on its own RabbitMQ queue, received the same event and, because the severity is high, it opened a corrective work order by itself, with no one clicking anything. Here it is on the board, in the Created column. It stores the alert ID, so a repeated message never creates a duplicate, and it keeps one active corrective order per asset. Now I assign one of our four technicians. The card moves to Assigned. I start the work, and it moves to In progress. Then I complete it. Each step is its own endpoint, and the finished job is written to the maintenance history for that asset. So a fault becomes tracked, auditable work from the first reading to the last repair. Yasiru will show how people are informed.',
   },
   {
-    kind: 'svc', n: '06', who: 'Yasiru', name: 'Notification Service', time: '2:38–3:27', screen: 'Notifications page',
+    kind: 'svc', n: '06', who: 'Yasiru', name: 'Notification Service', time: '5:24–7:02', screen: 'Notifications page: point at PUSH delivered, open a message, use Retry on one entry',
     head: 'Every alert delivered and recorded',
     flow: [['Queue', 'durable'], ['Consumer', 'schema check'], ['Channels', 'email · push'], ['History', 'stored']],
     stats: [['Instant', 'in-app push'], ['3', 'automatic retries'], ['100%', 'deliveries recorded']],
-    say: 'The Notification Service read the same alert from its own RabbitMQ queue. In this history, the in-app push was delivered instantly, and every email attempt is stored with its status, retry count and reason. A scheduler retries up to three times, I can retry any message here, and failing messages go to a dead-letter queue, so nothing is lost. Sachinthana will turn all this into reports.',
+    say: 'The Notification Service read the same alert from its own durable RabbitMQ queue, so it never depends on the Monitoring Service being online. The consumer checks the event schema, then sends the message on each channel. In this history, the in-app push shows as delivered, and it reached this browser instantly. Every email attempt is stored with its status, its retry count and the reason, so nothing is hidden. If delivery fails, a scheduler retries up to three times, sixty seconds apart, and I can also retry any message from this page. Messages that keep failing go to a dead-letter queue, so no alert is ever lost. Email settings come from environment variables, so no credentials are in the code. Sachinthana will now turn all this data into reports.',
   },
   {
-    kind: 'svc', n: '07', who: 'Sachinthana', name: 'Analytics Service', time: '3:27–4:16', screen: 'Analytics page: pick a facility, Generate, then export CSV',
+    kind: 'svc', n: '07', who: 'Sachinthana', name: 'Analytics Service', time: '7:02–8:40', screen: 'Analytics page: pick a facility, show the hourly energy chart and KPIs, Generate an energy report, click the CSV export',
     head: 'Trustworthy energy figures and reports',
     flow: [['Source APIs', 'REST only'], ['Calculation', 'power to kWh'], ['Reports', 'stored'], ['CSV', 'export']],
     stats: [['kWh', 'integrated from power'], ['6', 'KPIs with targets'], ['5 + 5', 'energy and performance reports']],
-    say: 'The Analytics Service calls the other services over REST and never touches their databases. For this facility it integrates average power into kilowatt-hours for each hour, and calculates availability, efficiency and capacity factor. I generate an energy report for the last day and export it as CSV for management. Nemal will show who is allowed to see it.',
+    say: 'The Analytics Service calls the other services over REST and never touches their databases. For this facility, I pick it from the selector, and the chart shows hourly energy. Our figures are true kilowatt-hours: the service takes average power for each hour and integrates it over time. It also calculates availability, efficiency, capacity factor and utilisation, and compares the energy with what the rated capacity should have produced. Now I generate an energy report for the last day. It is stored, and I export it as CSV for management. We also keep six KPIs with targets, dashboards and performance reports. Executives see all of this read-only, and Nemal will show exactly who is allowed to see what.',
   },
   {
-    kind: 'rbac', time: '4:16–4:38', who: 'Nemal', screen: 'Sign out, sign in as executive@reoagms.com, show the read-only pages',
-    say: 'Access is enforced at the gateway, and five roles carry different rights. I sign in as the executive: there are no action buttons, and the API itself refuses any write. Charith will close.',
+    kind: 'rbac', time: '8:40–9:23', who: 'Nemal', screen: 'Sign out, sign in as executive@reoagms.com (read-only pages), then optionally operator@reoagms.com',
+    say: 'Access is enforced at the gateway, and five roles carry different rights, as listed on this slide. I sign out and sign in as the executive. Every page is visible, but there are no action buttons, and the API itself returns forbidden for any write. Now the operator: it can handle alerts, but cannot create a facility. Passwords are stored as BCrypt hashes, and every login and user change is written to the audit log, which the administrator can review. Charith will close.',
   },
   {
-    kind: 'ops', time: '4:38–4:54', who: 'Charith', screen: 'Grafana tab, then back to the slide',
-    say: 'Grafana shows platform health from Prometheus across all seven services. Sixty tests protect the services, and one docker compose command starts everything.',
+    kind: 'ops', time: '9:23–9:48', who: 'Charith', screen: 'Grafana tab (REOAGMS Platform Health), then back to the slide',
+    say: 'Finally, operations. Grafana shows platform health from Prometheus, which scrapes all seven services. Sixty test methods protect the services, validation and error handling are built into every one of them, and one docker compose command starts all nineteen containers.',
   },
   {
-    kind: 'end', time: '4:54–5:00', who: 'All members', screen: 'Thank you slide',
-    say: 'Thank you. We are happy to take your questions.',
+    kind: 'end', time: '9:48–10:00', who: 'All members', screen: 'Thank you slide',
+    say: 'Thank you very much. We are happy to take your questions.',
   },
 ];
 
@@ -200,7 +200,7 @@ function liveChip(pres, s, text) {
     const shows = SHOWS[who];
     md += `| **${who}** | ${mine.map((x) => x.n).join(', ')} | ${total} s | ${shows} |\n`;
   });
-  md += `\nTotal spoken text: about ${words} words, under 5 minutes at a calm pace, with a few seconds spare for clicks. Each member's part below is complete: read only your own section.\n\n## The exact words, per member\n\n`;
+  md += `\nTotal spoken text: about ${words} words, for a 10-minute slot at a calm pace, including the pauses for clicks. Each member's part below is complete: read only your own section.\n\n## The exact words, per member\n\n`;
   order.forEach((who) => {
     const mine = SLIDES.map((d, i) => ({ d, n: i + 1 })).filter((x) => x.d.who === who);
     md += `# ${who}\n\n`;

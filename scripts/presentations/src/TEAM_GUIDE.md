@@ -62,6 +62,6 @@ Open http://localhost:5173. If a host port is taken (3000, 5433, 6379 are on thi
 - Secrets and demo accounts are development defaults.
 
 ## 7. Material
-- 5-minute live script: `deliverables/DEMO_SCRIPT.pdf`
-- Slides: one team deck `deliverables/REOAGMS-Team-Presentation.pptx` (10 slides, dark modern theme, timed to the 5-minute demo; speaker notes hold the exact words) — regenerate with `node scripts/presentations/build-decks.js` (needs `pptxgenjs`).
+- 10-minute live script: `deliverables/DEMO_SCRIPT.pdf`
+- Slides: one team deck `deliverables/REOAGMS-Team-Presentation.pptx` (10 slides, dark modern theme, timed to the 10-minute demo; speaker notes hold the exact words) — regenerate with `node scripts/presentations/build-decks.js` (needs `pptxgenjs`).
 - Contracts and schemas: `docs/INTEGRATION_CONTRACTS.md`, `docs/api`, `docs/database`, `docs/diagrams`.
