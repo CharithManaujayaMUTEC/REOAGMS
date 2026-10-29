@@ -8,7 +8,9 @@ const pptxgen = require('pptxgenjs');
 const OUT = path.join(__dirname, '..', '..', 'deliverables');
 fs.mkdirSync(OUT, { recursive: true });
 
-const BG = '0A1020', PANEL = '121B33', EDGE = '24314F', TEXT = 'F1F5FB', MUTED = '8C9BB8', CYAN = '22D3EE', LIME = 'A3E635';
+// Light, airy content slides with one teal accent; dark ink slides for the title and the close.
+const BG = 'F6F8FB', PANEL = 'FFFFFF', EDGE = 'DCE3EE', TEXT = '0B1B33', MUTED = '64748B', CYAN = '0891B2', LIME = '16A34A', WHITE = 'FFFFFF', TINT = 'E6F4F8';
+const INK = '0B1220', INK_EDGE = '1E2A44', INK_TEXT = 'F1F5FB', INK_MUTED = '8C9BB8', GLOW = '22D3EE';
 const FONT = 'Segoe UI', FONT_B = 'Segoe UI Semibold';
 const COURSE = 'EC8208 Software Architecture  ·  University of Ruhuna';
 
@@ -77,15 +79,23 @@ const OPS = [['60', 'test methods'], ['7', 'services monitored'], ['19', 'contai
 
 function frame(pres, s, kicker, title, n, time) {
   s.background = { color: BG };
-  s.addText(kicker, { x: 0.6, y: 0.4, w: 7, h: 0.3, fontFace: FONT_B, fontSize: 11, color: CYAN, charSpacing: 4, margin: 0, isTextBox: true });
-  s.addText(title, { x: 0.6, y: 0.75, w: 8.8, h: 0.7, fontFace: FONT_B, fontSize: 30, color: TEXT, margin: 0, isTextBox: true });
+  s.addShape(pres.ShapeType.rect, { x: 0.6, y: 0.47, w: 0.09, h: 0.09, fill: { color: CYAN }, line: { color: CYAN, width: 0 } });
+  s.addText(kicker, { x: 0.82, y: 0.4, w: 8, h: 0.24, fontFace: FONT_B, fontSize: 10.5, color: CYAN, charSpacing: 4, margin: 0, isTextBox: true });
+  s.addText(title, { x: 0.6, y: 0.78, w: 8.8, h: 0.7, fontFace: FONT_B, fontSize: 32, color: TEXT, margin: 0, isTextBox: true });
+  s.addShape(pres.ShapeType.line, { x: 0.6, y: 5.12, w: 8.8, h: 0, line: { color: EDGE, width: 0.75 } });
   s.addText(COURSE, { x: 0.6, y: 5.2, w: 6, h: 0.25, fontFace: FONT, fontSize: 9, color: MUTED, margin: 0, isTextBox: true });
   s.addText(`${n}  ·  ${time}`, { x: 7.4, y: 5.2, w: 2, h: 0.25, fontFace: FONT, fontSize: 9, color: MUTED, align: 'right', margin: 0, isTextBox: true });
 }
 
+function rings(pres, s) {
+  [[6.6, -1.2, 5.2], [7.5, -0.3, 3.4], [8.4, 0.6, 1.6]].forEach(([x, y, d], i) => {
+    s.addShape(pres.ShapeType.ellipse, { x, y: y + 0.4, w: d, h: d, fill: { type: 'none' }, line: { color: i === 2 ? GLOW : INK_EDGE, width: i === 2 ? 1.25 : 1 } });
+  });
+}
+
 function liveChip(pres, s, text) {
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.72, w: 4.6, h: 0.36, fill: { color: PANEL }, line: { color: CYAN, width: 0.75 }, rectRadius: 0.18 });
-  s.addText([{ text: 'LIVE  ', options: { bold: true, color: CYAN } }, { text, options: { color: TEXT } }], { x: 0.78, y: 4.72, w: 4.4, h: 0.36, fontFace: FONT, fontSize: 11, valign: 'middle', margin: 0, isTextBox: true });
+  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.7, w: 4.6, h: 0.36, fill: { color: TINT }, line: { color: TINT, width: 0 }, rectRadius: 0.18 });
+  s.addText([{ text: 'LIVE  ', options: { bold: true, color: CYAN } }, { text, options: { color: TEXT } }], { x: 0.8, y: 4.7, w: 4.3, h: 0.36, fontFace: FONT, fontSize: 11, valign: 'middle', margin: 0, isTextBox: true });
 }
 
 (async () => {
@@ -102,18 +112,19 @@ function liveChip(pres, s, text) {
     s.addNotes(d.who + ' (' + d.time + '): ' + d.say);
 
     if (d.kind === 'title') {
-      s.background = { color: BG };
-      s.addText('EC8208  ·  SOFTWARE ARCHITECTURE', { x: 0.7, y: 0.9, w: 8.6, h: 0.3, fontFace: FONT_B, fontSize: 12, color: CYAN, charSpacing: 5, margin: 0, isTextBox: true });
-      s.addText('REOAGMS', { x: 0.7, y: 1.4, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 66, color: TEXT, margin: 0, isTextBox: true });
-      s.addText('Renewable Energy Operations, Asset and Grid Management System', { x: 0.7, y: 2.65, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 20, color: MUTED, margin: 0, isTextBox: true });
-      s.addText('Charith  ·  Nemal  ·  Govindu  ·  Thurunu  ·  Yasiru  ·  Sachinthana', { x: 0.7, y: 4.35, w: 8.6, h: 0.35, fontFace: FONT_B, fontSize: 14, color: TEXT, margin: 0, isTextBox: true });
-      s.addText('Department of Electrical and Information Engineering  ·  University of Ruhuna', { x: 0.7, y: 4.75, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: MUTED, margin: 0, isTextBox: true });
+      s.background = { color: INK };
+      rings(pres, s);
+      s.addText('EC8208  ·  SOFTWARE ARCHITECTURE', { x: 0.7, y: 0.9, w: 8.6, h: 0.3, fontFace: FONT_B, fontSize: 12, color: GLOW, charSpacing: 5, margin: 0, isTextBox: true });
+      s.addText('REOAGMS', { x: 0.7, y: 1.4, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 66, color: INK_TEXT, margin: 0, isTextBox: true });
+      s.addText('Renewable Energy Operations, Asset and Grid Management System', { x: 0.7, y: 2.65, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 20, color: INK_MUTED, margin: 0, isTextBox: true });
+      s.addText('Charith  ·  Nemal  ·  Govindu  ·  Thurunu  ·  Yasiru  ·  Sachinthana', { x: 0.7, y: 4.35, w: 8.6, h: 0.35, fontFace: FONT_B, fontSize: 14, color: INK_TEXT, margin: 0, isTextBox: true });
+      s.addText('Department of Electrical and Information Engineering  ·  University of Ruhuna', { x: 0.7, y: 4.75, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: INK_MUTED, margin: 0, isTextBox: true });
     } else if (d.kind === 'arch') {
       frame(pres, s, '02 · CHARITH · ARCHITECTURE', 'One gateway, six independent services', num, d.time);
       s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.65, w: 8.8, h: 0.5, fill: { color: PANEL }, line: { color: EDGE, width: 0.75 }, rectRadius: 0.08 });
       s.addText('React console  ·  nginx  ·  live updates over WebSocket', { x: 0.6, y: 1.65, w: 8.8, h: 0.5, fontFace: FONT, fontSize: 13, color: TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
       s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 2.35, w: 8.8, h: 0.5, fill: { color: CYAN }, line: { color: CYAN, width: 0.75 }, rectRadius: 0.08 });
-      s.addText('API Gateway  ·  JWT validation  ·  role policy', { x: 0.6, y: 2.35, w: 8.8, h: 0.5, fontFace: FONT_B, fontSize: 14, color: BG, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+      s.addText('API Gateway  ·  JWT validation  ·  role policy', { x: 0.6, y: 2.35, w: 8.8, h: 0.5, fontFace: FONT_B, fontSize: 14, color: WHITE, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
       const w = (8.8 - 5 * 0.12) / 6;
       ARCH_SERVICES.forEach((name, i) => {
         const x = 0.6 + i * (w + 0.12);
@@ -130,14 +141,14 @@ function liveChip(pres, s, text) {
       d.flow.forEach(([t, sub], i) => {
         const x = 0.6 + i * (bw + gap);
         s.addShape(pres.ShapeType.roundRect, { x, y: 1.75, w: bw, h: 1.0, fill: { color: i === 0 ? CYAN : PANEL }, line: { color: i === 0 ? CYAN : EDGE, width: 0.75 }, rectRadius: 0.08 });
-        s.addText(t, { x, y: 1.82, w: bw, h: 0.5, fontFace: FONT_B, fontSize: 15, color: i === 0 ? BG : TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
-        s.addText(sub, { x, y: 2.28, w: bw, h: 0.35, fontFace: FONT, fontSize: 11, color: i === 0 ? BG : MUTED, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        s.addText(t, { x, y: 1.82, w: bw, h: 0.5, fontFace: FONT_B, fontSize: 15, color: i === 0 ? WHITE : TEXT, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+        s.addText(sub, { x, y: 2.28, w: bw, h: 0.35, fontFace: FONT, fontSize: 11, color: i === 0 ? TINT : MUTED, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
         if (i < n - 1) s.addText('›', { x: x + bw, y: 1.95, w: gap, h: 0.6, fontFace: FONT_B, fontSize: 24, color: CYAN, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
       });
       const sw = (8.8 - 2 * 0.3) / 3;
       d.stats.forEach(([big, label], i) => {
         const x = 0.6 + i * (sw + 0.3);
-        s.addShape(pres.ShapeType.line, { x, y: 3.2, w: sw, h: 0, line: { color: EDGE, width: 1 } });
+        s.addShape(pres.ShapeType.line, { x, y: 3.2, w: 0.5, h: 0, line: { color: CYAN, width: 2.25 } });
         s.addText(big, { x, y: 3.3, w: sw, h: 0.7, fontFace: FONT_B, fontSize: big.length > 8 ? 24 : 32, color: CYAN, valign: 'middle', margin: 0, isTextBox: true });
         s.addText(label, { x, y: 4.0, w: sw, h: 0.35, fontFace: FONT, fontSize: 12, color: MUTED, valign: 'top', margin: 0, isTextBox: true });
       });
@@ -156,16 +167,17 @@ function liveChip(pres, s, text) {
       const sw = (8.8 - 3 * 0.3) / 4;
       OPS.forEach(([big, label], i) => {
         const x = 0.6 + i * (sw + 0.3);
-        s.addShape(pres.ShapeType.line, { x, y: 2.0, w: sw, h: 0, line: { color: EDGE, width: 1 } });
+        s.addShape(pres.ShapeType.line, { x, y: 2.0, w: 0.5, h: 0, line: { color: i === 3 ? LIME : CYAN, width: 2.25 } });
         s.addText(big, { x, y: 2.15, w: sw, h: 0.9, fontFace: FONT_B, fontSize: 46, color: i === 3 ? LIME : CYAN, valign: 'middle', margin: 0, isTextBox: true });
         s.addText(label, { x, y: 3.1, w: sw, h: 0.35, fontFace: FONT, fontSize: 13, color: MUTED, margin: 0, isTextBox: true });
       });
       liveChip(pres, s, 'Grafana platform health');
     } else {
-      s.background = { color: BG };
-      s.addText('Thank you', { x: 0.7, y: 1.7, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 60, color: TEXT, margin: 0, isTextBox: true });
-      s.addText('Questions and discussion', { x: 0.7, y: 3.0, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 22, color: CYAN, margin: 0, isTextBox: true });
-      s.addText('REOAGMS  ·  EC8208 Software Architecture  ·  University of Ruhuna', { x: 0.7, y: 4.7, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: MUTED, margin: 0, isTextBox: true });
+      s.background = { color: INK };
+      rings(pres, s);
+      s.addText('Thank you', { x: 0.7, y: 1.7, w: 8.6, h: 1.2, fontFace: FONT_B, fontSize: 60, color: INK_TEXT, margin: 0, isTextBox: true });
+      s.addText('Questions and discussion', { x: 0.7, y: 3.0, w: 8.6, h: 0.5, fontFace: FONT, fontSize: 22, color: GLOW, margin: 0, isTextBox: true });
+      s.addText('REOAGMS  ·  EC8208 Software Architecture  ·  University of Ruhuna', { x: 0.7, y: 4.7, w: 8.6, h: 0.3, fontFace: FONT, fontSize: 11, color: INK_MUTED, margin: 0, isTextBox: true });
     }
   });
 
