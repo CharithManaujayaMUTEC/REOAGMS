@@ -1,0 +1,135 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>REOAGMS architecture, patterns and Q&amp;A</title>
+<style>
+  :root { --ink:#0b1b33; --blue:#2b3dff; --grey:#5b6478; --soft:#f0f2f9; --line:#dfe3ee; }
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; color: var(--ink); font-size: 10pt; line-height: 1.4; margin: 0; }
+  h1 { font-size: 22pt; font-weight: 300; margin: 0 0 2pt; } h1 b { color: var(--blue); font-weight: 600; }
+  .sub { color: var(--grey); margin: 0 0 10pt; }
+  h2 { font-size: 13pt; margin: 14pt 0 6pt; color: var(--blue); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; font-size: 9pt; }
+  th { background: #0b1220; color: #fff; text-align: left; padding: 4pt 6pt; font-weight: 600; }
+  td { border-bottom: 1px solid var(--line); padding: 4pt 6pt; vertical-align: top; }
+  td:first-child { font-weight: 600; white-space: nowrap; width: 22%; }
+  .qa p { margin: 0 0 6pt; } .qa .q { font-weight: 600; margin: 8pt 0 1pt; } .qa .q:before { content: 'Q. '; color: var(--blue); }
+  .note { background: var(--soft); border-radius: 4pt; padding: 6pt 8pt; margin: 8pt 0; font-size: 9pt; }
+  svg { width: 100%; height: auto; display: block; }
+  .pb { page-break-before: always; }
+</style></head><body>
+
+<h1>REOAGMS <b>at a glance</b></h1>
+<p class="sub">Renewable Energy Operations, Asset and Grid Management System · EC8208 Software Architecture · Group 9 · University of Ruhuna</p>
+
+<svg viewBox="0 0 760 470" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2b3dff"/></marker>
+    <marker id="g" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#16a34a"/></marker>
+  </defs>
+  <style>
+    .box{fill:#fff;stroke:#c9d0e4;stroke-width:1.2} .svc{fill:#f0f2f9;stroke:#c9d0e4} .gw{fill:#2b3dff} .dark{fill:#0b1220}
+    .t{font-size:12px;fill:#0b1b33;text-anchor:middle} .s{font-size:9.5px;fill:#5b6478;text-anchor:middle} .w{fill:#fff;font-size:12.5px;font-weight:600;text-anchor:middle}
+    .l{font-size:9.5px;fill:#2b3dff} .lg{font-size:9.5px;fill:#16a34a}
+  </style>
+  <!-- Client -->
+  <rect class="dark" x="150" y="8" width="460" height="42" rx="6"/>
+  <text class="w" x="380" y="27">React console + nginx</text>
+  <text x="380" y="41" fill="#8fa0ff" font-size="9.5" text-anchor="middle">/api (REST)  ·  /ws (STOMP over WebSocket)</text>
+  <!-- Gateway -->
+  <rect class="gw" x="150" y="78" width="460" height="42" rx="6"/>
+  <text class="w" x="380" y="96">API Gateway :8080</text>
+  <text x="380" y="111" fill="#dfe4ff" font-size="9.5" text-anchor="middle">JWT validation · role policy (RBAC) · routing under /api/v1</text>
+  <line x1="380" y1="50" x2="380" y2="78" stroke="#2b3dff" stroke-width="1.5" marker-end="url(#a)"/>
+  <!-- Services -->
+  <g id="svcs">
+    <rect class="svc" x="10"  y="165" width="110" height="64" rx="6"/><text class="t" x="65"  y="188">Identity</text><text class="s" x="65"  y="203">users · roles · audit</text><text class="s" x="65"  y="219">8081</text>
+    <rect class="svc" x="132" y="165" width="110" height="64" rx="6"/><text class="t" x="187" y="188">Asset</text><text class="s" x="187" y="203">facility · asset · sensor</text><text class="s" x="187" y="219">8082</text>
+    <rect class="svc" x="254" y="165" width="110" height="64" rx="6"/><text class="t" x="309" y="188">Monitoring</text><text class="s" x="309" y="203">readings · rules · alerts</text><text class="s" x="309" y="219">8083</text>
+    <rect class="svc" x="376" y="165" width="110" height="64" rx="6"/><text class="t" x="431" y="188">Maintenance</text><text class="s" x="431" y="203">work orders · crew</text><text class="s" x="431" y="219">8084</text>
+    <rect class="svc" x="498" y="165" width="110" height="64" rx="6"/><text class="t" x="553" y="188">Analytics</text><text class="s" x="553" y="203">KPIs · reports · CSV</text><text class="s" x="553" y="219">8085</text>
+    <rect class="svc" x="620" y="165" width="130" height="64" rx="6"/><text class="t" x="685" y="188">Notification</text><text class="s" x="685" y="203">email · SMS · push · WS</text><text class="s" x="685" y="219">8086</text>
+  </g>
+  <g stroke="#2b3dff" stroke-width="1.2" marker-end="url(#a)" fill="none">
+    <path d="M380,120 L380,140 L65,140 L65,165"/><path d="M380,120 L380,140 L187,140 L187,165"/><path d="M380,120 L380,140 L309,140 L309,165"/>
+    <path d="M380,120 L380,140 L431,140 L431,165"/><path d="M380,120 L380,140 L553,140 L553,165"/><path d="M380,120 L380,140 L685,140 L685,165"/>
+  </g>
+  <!-- DBs -->
+  <g class="box">
+    <rect x="22"  y="262" width="86" height="30" rx="4" class="box"/><rect x="144" y="262" width="86" height="30" rx="4" class="box"/><rect x="266" y="262" width="86" height="30" rx="4" class="box"/>
+    <rect x="388" y="262" width="86" height="30" rx="4" class="box"/><rect x="510" y="262" width="86" height="30" rx="4" class="box"/><rect x="642" y="262" width="86" height="30" rx="4" class="box"/>
+  </g>
+  <g class="s"><text x="65" y="281">identity_db</text><text x="187" y="281">asset_db</text><text x="309" y="281">monitoring_db</text><text x="431" y="281">maintenance_db</text><text x="553" y="281">analytics_db</text><text x="685" y="281">notification_db</text></g>
+  <g stroke="#94a0c4" stroke-width="1"><line x1="65" y1="229" x2="65" y2="262"/><line x1="187" y1="229" x2="187" y2="262"/><line x1="309" y1="229" x2="309" y2="262"/><line x1="431" y1="229" x2="431" y2="262"/><line x1="553" y1="229" x2="553" y2="262"/><line x1="685" y1="229" x2="685" y2="262"/></g>
+  <text class="s" x="10" y="312" style="font-size:9.5px;text-anchor:start">PostgreSQL per service (database per service, no shared tables)</text>
+  <!-- Bus -->
+  <rect x="150" y="332" width="460" height="38" rx="6" fill="#e9fbef" stroke="#16a34a"/>
+  <text class="t" x="380" y="349" style="font-weight:600">RabbitMQ · exchange reoagms.events</text>
+  <text class="s" x="380" y="362">monitoring.alert.opened.v1 → notification queue (+ DLQ) and maintenance queue</text>
+  <path d="M358,229 L358,332" stroke="#16a34a" stroke-width="1.4" fill="none" marker-end="url(#g)"/>
+  <text class="lg" x="332" y="322" style="text-anchor:end">publish</text>
+  <path d="M480,332 L480,232" stroke="#16a34a" stroke-width="1.4" fill="none" marker-end="url(#g)"/>
+  <path d="M610,351 L736,351 L736,232" stroke="#16a34a" stroke-width="1.4" fill="none" marker-end="url(#g)"/>
+  <text class="lg" x="620" y="344">consume</text>
+  <text class="lg" x="486" y="322">consume</text>
+  <!-- push -->
+  <path d="M750,200 L756,200 L756,29 L610,29" stroke="#2b3dff" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#a)"/>
+  <text class="l" x="752" y="20" style="text-anchor:end">live push (STOMP /topic/alerts)</text>
+  <!-- Redis / Obs -->
+  <rect class="box" x="10" y="332" width="120" height="38" rx="6"/><text class="t" x="70" y="349">Redis cache</text><text class="s" x="70" y="362">Monitoring dashboard, 10 s</text>
+  
+  <rect class="dark" x="150" y="400" width="460" height="42" rx="6"/>
+  <text class="w" x="380" y="418">Prometheus → Grafana</text>
+  <text x="380" y="433" fill="#8fa0ff" font-size="9.5" text-anchor="middle">scrapes /actuator/prometheus on all 7 services · REOAGMS Platform Health dashboard</text>
+  <text class="s" x="380" y="462" style="font-size:9.5px">Simulator container: seeds data and streams telemetry through the same REST APIs (real database data)</text>
+</svg>
+
+<h2>The flow in one line</h2>
+<p>Sensor reading → <b>Monitoring</b> checks the rules → alert stored once → event on <b>RabbitMQ</b> → <b>Maintenance</b> opens a corrective work order, and <b>Notification</b> records and pushes it to the browser in real time → <b>Analytics</b> turns the data into KPIs and reports.</p>
+
+<h2>Architecture style</h2>
+<p><b>Hybrid:</b> layered inside each service (controller → service → repository), client–server between the console and the platform, microservices as the deployment structure, and event-driven messaging between services.</p>
+
+<div class="pb"></div>
+<h1>Design patterns <b>used here</b></h1>
+<p class="sub">Verified against the code (counts are from the backend source).</p>
+<table>
+<tr><th>Pattern</th><th>Where it appears</th></tr>
+<tr><td>Singleton</td><td>Spring beans are singleton-scoped by default: one shared instance of every service, repository, controller, <code>JwtService</code>, <code>PushDispatcher</code> and config class per application context. We did not hand-write a <code>getInstance()</code>; the container guarantees it, which is thread-safe and testable.</td></tr>
+<tr><td>Dependency Injection / IoC</td><td>Constructor injection everywhere; beans are wired by Spring, so classes depend on interfaces, not on how they are built.</td></tr>
+<tr><td>API Gateway</td><td>Spring Cloud Gateway: single entry point, JWT validation and role policy (cross-cutting concerns offloaded from the services).</td></tr>
+<tr><td>Microservices + Database per service</td><td>Six services, six PostgreSQL databases, no shared tables; cross-service references are UUIDs.</td></tr>
+<tr><td>Layered architecture</td><td>Controller → Service (interface + <code>*ServiceImpl</code>, 28 of them) → Repository, in every service.</td></tr>
+<tr><td>Repository</td><td>Spring Data JPA repositories (22) hide persistence behind interfaces.</td></tr>
+<tr><td>Specification</td><td>JPA Specifications (11 files) build dynamic search filters for assets and work orders.</td></tr>
+<tr><td>DTO</td><td>Separate request and response objects (21 dto packages) keep entities out of the API.</td></tr>
+<tr><td>Builder</td><td>Lombok <code>@Builder</code> on 57 classes for readable object construction.</td></tr>
+<tr><td>Publish / Subscribe (event-driven)</td><td>Monitoring publishes <code>monitoring.alert.opened.v1</code> to a RabbitMQ topic exchange; Notification and Maintenance each consume from their own queue, with a dead-letter queue.</td></tr>
+<tr><td>Observer</td><td>The browser subscribes to STOMP topics <code>/topic/alerts</code> and <code>/topic/notifications</code>; the server notifies all subscribers.</td></tr>
+<tr><td>Strategy</td><td>Notification channels (<code>EmailDispatcher</code>, <code>SmsDispatcher</code>, <code>PushDispatcher</code>) share a dispatcher role and are chosen by <code>NotificationChannel</code>.</td></tr>
+<tr><td>Chain of Responsibility / Filter</td><td><code>AuthenticationFilter</code> at the gateway and <code>JwtAuthenticationFilter</code> in Identity process each request in a filter chain.</td></tr>
+<tr><td>Cache-aside + graceful degradation</td><td><code>@Cacheable</code> dashboard summary in Redis (10 s); a cache error handler falls back to PostgreSQL if Redis is down.</td></tr>
+<tr><td>Idempotent consumer</td><td>Maintenance stores the alert ID and skips an asset that already has an active corrective order, so redelivery creates no duplicate.</td></tr>
+<tr><td>Centralised exception handling</td><td><code>@RestControllerAdvice</code> in each service (10 classes) returns one consistent JSON error shape.</td></tr>
+<tr><td>Scheduler / retry</td><td><code>@Scheduled</code> retry of failed notifications, up to 3 attempts, 60 s apart.</td></tr>
+</table>
+
+<div class="note"><b>If asked about Singleton directly:</b> "In Spring every bean is a singleton by default, so each service and repository exists once per application. We rely on the IoC container instead of a manual singleton, which avoids global state and keeps classes easy to unit-test with mocks."</div>
+
+<div class="pb"></div>
+<h1>Likely questions <b>and answers</b></h1>
+<div class="qa">
+<p class="q">Why microservices instead of a monolith?</p><p>Independent deployment and scaling, fault isolation, clear business domains and one owner per service. The cost is more moving parts, which Docker Compose and the gateway keep manageable.</p>
+<p class="q">Why an API Gateway?</p><p>One entry point for authentication and authorisation, simple routing, and the browser never talks to services directly. Security rules live in one place.</p>
+<p class="q">How do services communicate, and why two styles?</p><p>REST when an answer is needed now (Analytics reading other services). RabbitMQ events when the sender should not wait or depend on receivers (alerts), which gives loose coupling and resilience.</p>
+<p class="q">How do you handle data consistency without a shared database?</p><p>Eventual consistency: each service owns its data, and events carry changes. There is no distributed transaction; consumers are idempotent and failed messages go to a dead-letter queue.</p>
+<p class="q">What happens if a service or RabbitMQ consumer is down?</p><p>Queues are durable, so messages wait and are processed when the consumer returns. Other services keep working, which is the point of fault isolation.</p>
+<p class="q">What if Redis fails?</p><p>The cache error handler swallows the error and PostgreSQL answers; the API stayed under a second in our test.</p>
+<p class="q">Why RabbitMQ and not Kafka?</p><p>Our need is reliable routing of discrete events to a few consumers, with dead-lettering and simple operation. Kafka suits very high-volume streaming and replay, which we do not need.</p>
+<p class="q">How is security designed?</p><p>JWT (HS256) with a role claim, BCrypt password hashes, role policy at the gateway (401 without a token, 403 by role), and an audit log of logins and user changes. Self-registration always gets the lowest role.</p>
+<p class="q">How do you scale it?</p><p>Services are stateless, so run more instances behind the gateway. RabbitMQ lets consumers scale as competing consumers, Redis offloads reads, and starter Kubernetes manifests are in <code>k8s/base</code>.</p>
+<p class="q">How is the system observed?</p><p>Spring Boot Actuator exposes Prometheus metrics on every service; Prometheus scrapes all 7 targets and Grafana shows the provisioned Platform Health dashboard.</p>
+<p class="q">Which quality attributes did the architecture target?</p><p>Modifiability and independent deployability (microservices), availability (isolation, durable queues, cache fallback), security (gateway RBAC), performance (cache, paging, async events) and observability.</p>
+<p class="q">How do you version events?</p><p>The alert event carries a version in its name and a schema version field (<code>monitoring.alert.opened.v1</code>), so a v2 can run beside v1; the contract is in <code>docs/INTEGRATION_CONTRACTS.md</code>.</p>
+<p class="q">How did you test?</p><p>About 60 unit test methods across modules, plus an end-to-end check of reading → alert → RabbitMQ → work order → notification → push, an RBAC matrix check and a Redis-outage check.</p>
+<p class="q">What would you improve next?</p><p>More unit tests for Identity and Maintenance, OpenAPI for every service, a real SMTP and SMS provider, secrets management and TLS, and a circuit breaker on service-to-service REST calls.</p>
+<p class="q">Is the demo data real?</p><p>Yes. The simulator uses the same REST APIs as the console, so every record is validated and stored in the owning service's PostgreSQL database.</p>
+</div>
+</body></html>
